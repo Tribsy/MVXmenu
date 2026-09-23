@@ -1,103 +1,124 @@
 package dev.mvxmenu.ui.layout;
 
+import dev.mvxmenu.config.MvxmenuUiConfig;
 import dev.mvxmenu.ui.screen.MvxmenuScreen;
 
 public class MvxmenuLayout {
 
-    public static final int SIDEBAR_WIDTH = 180;
-    public static final int HEADER_HEIGHT = 48;
-    public static final int FOOTER_HEIGHT = 32;
-    public static final int PADDING = 16;
+    private final MvxmenuUiConfig config;
+    private final MvxmenuUiConfig.LayoutConfig layout;
 
-    public static final int SCREEN_WIDTH = 1200;
-    public static final int SCREEN_HEIGHT = 800;
-
-    public static final int CONTENT_X = SIDEBAR_WIDTH + PADDING;
-    public static final int CONTENT_Y = HEADER_HEIGHT + PADDING;
-    public static final int CONTENT_WIDTH = SCREEN_WIDTH - SIDEBAR_WIDTH - (PADDING * 2);
-    public static final int CONTENT_HEIGHT = SCREEN_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - (PADDING * 2);
-
-    public static final int SIDEBAR_X = 0;
-    public static final int SIDEBAR_Y = 0;
-    public static final int SIDEBAR_CONTENT_WIDTH = SIDEBAR_WIDTH;
-    public static final int SIDEBAR_CONTENT_HEIGHT = SCREEN_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT;
-
-    public static final int HEADER_X = 0;
-    public static final int HEADER_Y = 0;
-    public static final int HEADER_WIDTH = SCREEN_WIDTH;
-
-    public static final int FOOTER_X = 0;
-    public static final int FOOTER_Y = SCREEN_HEIGHT - FOOTER_HEIGHT;
-    public static final int FOOTER_WIDTH = SCREEN_WIDTH;
-
-    public static final int SLOT_SIZE = 72;
-    public static final int SLOT_SPACING = 4;
-
-    public static int sidebarStartX() {
-        return SIDEBAR_X;
+    public MvxmenuLayout() {
+        this.config = MvxmenuUiConfig.get();
+        this.layout = config.getLayout();
     }
 
-    public static int sidebarStartY() {
-        return HEADER_HEIGHT;
+    public int sidebarWidth() {
+        return layout.sidebarWidth;
     }
 
-    public static int sidebarWidth() {
-        return SIDEBAR_WIDTH;
+    public int headerHeight() {
+        return layout.headerHeight;
     }
 
-    public static int sidebarHeight() {
-        return SIDEBAR_CONTENT_HEIGHT;
+    public int footerHeight() {
+        return layout.footerHeight;
     }
 
-    public static int contentStartX() {
-        return CONTENT_X;
+    public int padding() {
+        return layout.padding;
     }
 
-    public static int contentStartY() {
-        return CONTENT_Y;
+    public int screenWidth() {
+        return layout.screenWidth;
     }
 
-    public static int contentWidth() {
-        return CONTENT_WIDTH;
+    public int screenHeight() {
+        return layout.screenHeight;
     }
 
-    public static int contentHeight() {
-        return CONTENT_HEIGHT;
+    public int contentX() {
+        return sidebarWidth() + padding();
     }
 
-    public static int headerHeight() {
-        return HEADER_HEIGHT;
+    public int contentY() {
+        return headerHeight() + padding();
     }
 
-    public static int footerHeight() {
-        return FOOTER_HEIGHT;
+    public int contentWidth() {
+        return screenWidth() - sidebarWidth() - (padding() * 2);
     }
 
-    public static int padding() {
-        return PADDING;
+    public int contentHeight() {
+        return screenHeight() - headerHeight() - footerHeight() - (padding() * 2);
     }
 
-    public static int slotWidth() {
-        return SLOT_SIZE;
+    public int sidebarX() {
+        return 0;
     }
 
-    public static int slotHeight() {
-        return SLOT_SIZE;
+    public int sidebarY() {
+        return 0;
     }
 
-    public static int slotX(int column) {
-        return CONTENT_X + (column * (SLOT_SIZE + SLOT_SPACING));
+    public int sidebarContentWidth() {
+        return sidebarWidth();
     }
 
-    public static int slotY(int row) {
-        return CONTENT_Y + (row * (SLOT_SIZE + SLOT_SPACING));
+    public int sidebarContentHeight() {
+        return screenHeight() - headerHeight() - footerHeight();
     }
 
-    public static int columnCount() {
-        return Math.max(1, (CONTENT_WIDTH + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING));
+    public int headerX() {
+        return 0;
+    }
+
+    public int headerY() {
+        return 0;
+    }
+
+    public int headerWidth() {
+        return screenWidth();
+    }
+
+    public int footerX() {
+        return 0;
+    }
+
+    public int footerY() {
+        return screenHeight() - footerHeight();
+    }
+
+    public int footerWidth() {
+        return screenWidth();
+    }
+
+    public int slotSize() {
+        return layout.slotSize;
+    }
+
+    public int slotSpacing() {
+        return layout.slotSpacing;
+    }
+
+    public int slotX(int column) {
+        return contentX() + (column * (slotSize() + slotSpacing()));
+    }
+
+    public int slotY(int row) {
+        return contentY() + (row * (slotSize() + slotSpacing()));
+    }
+
+    public int columnCount() {
+        return Math.max(1, (contentWidth() + slotSpacing()) / (slotSize() + slotSpacing()));
+    }
+
+    public void recalculate() {
+        // Config is live-referenced, no recalculation needed unless config changes
     }
 
     public void calculate(MvxmenuScreen screen) {
+        // Config-driven layout, no manual calculation needed
     }
 
     public static final class Bounds {

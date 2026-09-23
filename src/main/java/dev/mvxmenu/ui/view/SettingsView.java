@@ -16,11 +16,11 @@ public class SettingsView {
 
     public static final String GUI_SCALE_LABEL = "GUI SCALE";
     public static final String THEME_ACCENT_LABEL = "THEME ACCENT";
-    public static final String BLUR_EFFECTS_LABEL = "ENABLE BLUR EFFECTS";
+    public static final String BLUR_EFFECTS_LABEL = "BLUR EFFECTS";
     public static final String SCANLINE_OVERLAY_LABEL = "SCANLINE OVERLAY";
     public static final String TICK_RATE_LABEL = "TICK RATE LIMIT";
     public static final String RENDER_BACKEND_LABEL = "RENDER BACKEND";
-    public static final String TELEMETRY_LABEL = "Telemetry";
+    public static final String TELEMETRY_LABEL = "TELEMETRY";
     public static final String HIGH_CONTRAST_LABEL = "HIGH CONTRAST MODE";
 
     public static final String BG_OPACITY_LABEL = "BACKGROUND OPACITY";
@@ -45,8 +45,9 @@ public class SettingsView {
         this.config = config;
         widgets.clear();
 
-        DropdownWidget guiScale = new DropdownWidget("settings_gui_scale", GUI_SCALE_LABEL, 
-                new String[]{"AUTO (0)", "1x", "2x", "3x", "4x"}, 
+        // Appearance Section
+        DropdownWidget guiScale = new DropdownWidget("settings_gui_scale", GUI_SCALE_LABEL,
+                new String[]{"AUTO (0)", "1x", "2x", "3x", "4x"},
                 config.getGuiScale() == 0 ? "AUTO (0)" : config.getGuiScale() + "x");
         widgets.add(guiScale);
 
@@ -58,7 +59,6 @@ public class SettingsView {
         ToggleWidget useCustomAccent = new ToggleWidget("settings_use_custom_accent", config.isUseCustomAccent());
         widgets.add(useCustomAccent);
 
-        // Custom accent color would need a color picker widget - using string for now
         DropdownWidget customAccent = new DropdownWidget("settings_custom_accent", CUSTOM_ACCENT_LABEL,
                 new String[]{"DEFAULT GREEN", "BLUE", "RED", "PURPLE", "ORANGE", "YELLOW", "CYAN", "PINK"},
                 formatColor(config.getCustomAccent()));
@@ -82,6 +82,7 @@ public class SettingsView {
         SliderWidget panelRounding = new SliderWidget("settings_panel_rounding", PANEL_ROUNDING_LABEL, 0, 8, config.getPanelRounding());
         widgets.add(panelRounding);
 
+        // Performance Section
         SliderWidget tickRate = new SliderWidget("settings_tick_rate", TICK_RATE_LABEL, 20, 200, config.getTickRateLimit());
         widgets.add(tickRate);
 
@@ -90,6 +91,7 @@ public class SettingsView {
                 config.getRenderBackend());
         widgets.add(renderBackend);
 
+        // System Section
         ToggleWidget telemetry = new ToggleWidget("settings_telemetry", config.isTelemetry());
         widgets.add(telemetry);
 

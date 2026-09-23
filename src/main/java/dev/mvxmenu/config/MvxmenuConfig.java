@@ -62,14 +62,6 @@ public class MvxmenuConfig {
     @SerializedName("panel_rounding")
     private int panelRounding = 4;
 
-    private NbtCompound moduleStates = new NbtCompound();
-
-    @Expose
-    @SerializedName("module_keybinds")
-    private NbtCompound moduleKeybinds = new NbtCompound();
-
-    private NbtCompound moduleSettings = new NbtCompound();
-
     public MvxmenuConfig() {
     }
 
@@ -183,29 +175,5 @@ public class MvxmenuConfig {
 
     public void setPanelRounding(int panelRounding) {
         this.panelRounding = Math.max(0, Math.min(8, panelRounding));
-    }
-
-    public NbtCompound getModuleStates() {
-        return moduleStates;
-    }
-
-    public void setModuleStates(NbtCompound moduleStates) {
-        this.moduleStates = moduleStates != null ? moduleStates : new NbtCompound();
-    }
-
-    public NbtCompound getModuleKeybinds() {
-        return moduleKeybinds;
-    }
-
-    public void setModuleKeybinds(NbtCompound moduleKeybinds) {
-        this.moduleKeybinds = moduleKeybinds != null ? moduleKeybinds : new NbtCompound();
-    }
-
-    public NbtCompound getModuleSettings() {
-        return moduleSettings;
-    }
-
-    public void setModuleSettings(NbtCompound moduleSettings) {
-        this.moduleSettings = moduleSettings != null ? moduleSettings : new NbtCompound();
     }
 }

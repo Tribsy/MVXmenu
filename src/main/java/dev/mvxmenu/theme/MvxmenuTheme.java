@@ -35,31 +35,33 @@ public final class MvxmenuTheme {
     public static final int TX_2 = 0xFF5C5C5C;
     public static final int TX_3 = 0xFF333333;
 
-    // Accent / Semantic
-    public static final int AC = 0xFF7CFFB1;
-    public static final int SUCCESS = 0xFF7CFFB1;
-    public static final int WARNING = 0xFFFFC857;
-    public static final int DANGER = 0xFFFF5F7A;
-    public static final int INFO = 0xFF7AC7FF;
-    public static final int PURPLE = 0xFFB38AFF;
-    public static final int ORANGE = 0xFFFFA25B;
+    // Accent / Semantic - Figma uses #4ADE80 for accent
+    public static final int AC = 0xFF4ADE80;
+    public static final int SUCCESS = 0xFF4ADE80;
+    public static final int WARNING = 0xFFFCD34D;
+    public static final int DANGER = 0xFFF87171;
+    public static final int INFO = 0xFF60A5FA;
+    public static final int PURPLE = 0xFFA78BFA;
+    public static final int ORANGE = 0xFFFB923C;
+
+    // Semantic backgrounds (10% opacity)
+    public static final int SUCCESS_BG = 0x1A4ADE80;
+    public static final int WARNING_BG = 0x1AFCD34D;
+    public static final int DANGER_BG = 0x1AF87171;
+    public static final int INFO_BG = 0x1A60A5FA;
 
     // Overlays
     public static final int AC_DIM = 0x124ADE80;
     public static final int AC_BORDER = 0x384ADE80;
     public static final int AC_FG = 0xFF052E16;
-    public static final int SUCCESS_BG = 0x124ADE80;
-    public static final int WARNING_BG = 0x12FCD34D;
-    public static final int DANGER_BG = 0x12F87171;
-    public static final int INFO_BG = 0x1260A5FA;
 
-    // Radius (pixels)
+    // Radius (pixels) - Figma: R_1=2px, R_2=3px, R_3=4px, R_4=6px
     public static final int R_1 = 2;
     public static final int R_2 = 3;
     public static final int R_3 = 4;
     public static final int R_4 = 6;
 
-    // Spacing (pixels)
+    // Spacing (pixels) - Figma: SP_1=4, SP_2=8, SP_3=12, SP_4=16, SP_6=24, SP_8=32, SP_12=48
     public static final int SP_1 = 4;
     public static final int SP_2 = 8;
     public static final int SP_3 = 12;

@@ -2,7 +2,7 @@
   "required": true,
   "package": "dev.mvxmenu.mixin",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "mixins.mvxmenu.refmap.json",
+  "refmap": "mvxmenu-refmap.json",
   "mixins": [
     "MinecraftClientMixin",
     "ClientPlayerEntityMixin",

@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "layout": {
+    "screenWidth": 1200,
+    "screenHeight": 800,
+    "sidebarWidth": 180,
+    "headerHeight": 48,
+    "footerHeight": 32,
+    "padding": 16,
+    "slotSize": 72,
+    "slotSpacing": 4
+  },
+  "theme": {
+    "accent": "DEFAULT",
+    "customAccent": "#4ADE80",
+    "bgOpacity": 90,
+    "panelRounding": 4,
+    "animationSpeed": 100,
+    "highContrast": false,
+    "blurEffects": true,
+    "scanlineOverlay": false
+  },
+  "categories": [
+    { "id": "COMBAT", "label": "CATEGORY 01", "icon": "SHIELD" },
+    { "id": "MOVEMENT", "label": "CATEGORY 02", "icon": "EYE" },
+    { "id": "PLAYER", "label": "CATEGORY 03", "icon": "CROSSHAIR" },
+    { "id": "RENDER", "label": "CATEGORY 04", "icon": "ZAP" },
+    { "id": "WORLD", "label": "CATEGORY 05", "icon": "RADAR" },
+    { "id": "EXPLOIT", "label": "CATEGORY 06", "icon": "LAYERS" }
+  ],
+  "components": {
+    "button": { "radius": 2, "height": 30 },
+    "toggle": { "width": 32, "height": 16 },
+    "slider": { "trackHeight": 6, "thumbSize": 12 },
+    "dropdown": { "height": 28 },
+    "checkbox": { "size": 14 },
+    "keybind": { "minWidth": 60, "height": 24 }
+  },
+  "typography": {
+    "font": "JetBrains Mono",
+    "sizes": { "hero": 14, "display": 10, "heading": 8, "subheading": 6, "default": 6, "body": 5, "label": 5, "micro": 4 }
+  }
+}

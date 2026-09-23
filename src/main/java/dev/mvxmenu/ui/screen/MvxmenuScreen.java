@@ -92,6 +92,7 @@ public class MvxmenuScreen {
     }
 
     public void init() {
+        widgets.clear();
         layout.calculate(this);
         layoutSidebarButtons();
         layoutCategoryContent();
@@ -99,9 +100,9 @@ public class MvxmenuScreen {
     }
 
     private void layoutSidebarButtons() {
-        int x = MvxmenuLayout.SIDEBAR_X + 6;
-        int y = MvxmenuLayout.HEADER_HEIGHT + 8;
-        int buttonWidth = MvxmenuLayout.SIDEBAR_WIDTH - 12;
+        int x = layout.sidebarX() + 6;
+        int y = layout.headerHeight() + 8;
+        int buttonWidth = layout.sidebarWidth() - 12;
         int buttonHeight = 32;
         int gap = 4;
 
@@ -118,15 +119,16 @@ public class MvxmenuScreen {
             y += buttonHeight + gap;
         }
 
-        int settingsY = MvxmenuLayout.HEADER_HEIGHT + 8 + 36 + (categories.length * (buttonHeight + gap)) + 16;
+        int settingsY = layout.headerHeight() + 8 + 36 + (categories.length * (buttonHeight + gap)) + 16;
         settingsButton = new CategoryButtonWidget("settings", "SYSTEM", MvxmenuIcons.CLOCK);
         settingsButton.setBounds(new MvxmenuLayout.Bounds(x, settingsY, buttonWidth, buttonHeight));
         widgets.add(settingsButton);
     }
 
     private void layoutCategoryContent() {
-        int contentX = MvxmenuLayout.CONTENT_X + MvxmenuLayout.PADDING;
-        int contentY = MvxmenuLayout.HEADER_HEIGHT + MvxmenuLayout.PADDING;
+        widgets.removeIf(w -> w instanceof ModuleCardWidget);
+        int contentX = layout.contentX() + layout.padding();
+        int contentY = layout.contentY() + layout.padding();
         int cardWidth = 200;
         int cardHeight = 80;
         int gapX = 8;
@@ -168,9 +170,10 @@ public class MvxmenuScreen {
 
     private void layoutSettings() {
         if (config == null) return;
-        int contentX = MvxmenuLayout.CONTENT_X + MvxmenuLayout.PADDING;
-        int contentY = MvxmenuLayout.HEADER_HEIGHT + MvxmenuLayout.PADDING + 32;
-        int width = MvxmenuLayout.CONTENT_WIDTH - MvxmenuLayout.PADDING * 2;
+        widgets.removeIf(w -> w instanceof DropdownWidget || w instanceof ToggleWidget || w instanceof SliderWidget || w instanceof ButtonWidget);
+        int contentX = layout.contentX() + layout.padding();
+        int contentY = layout.contentY() + layout.padding() + 32;
+        int width = layout.contentWidth() - layout.padding() * 2;
         int y = contentY;
 
         for (MvxmenuWidget w : settingsView.getWidgets()) {
@@ -198,18 +201,18 @@ public class MvxmenuScreen {
     }
 
     private void renderBackground(DrawContext context) {
-        context.fill(MvxmenuLayout.SIDEBAR_X, MvxmenuLayout.SIDEBAR_Y,
-                MvxmenuLayout.SIDEBAR_X + MvxmenuLayout.SIDEBAR_WIDTH, MvxmenuLayout.SIDEBAR_Y + MvxmenuLayout.SIDEBAR_CONTENT_HEIGHT,
+        context.fill(layout.sidebarX(), layout.sidebarY(),
+                layout.sidebarX() + layout.sidebarWidth(), layout.sidebarY() + layout.sidebarContentHeight(),
                 MvxmenuTheme.BG_1);
-        context.fill(MvxmenuLayout.CONTENT_X, MvxmenuLayout.CONTENT_Y,
-                MvxmenuLayout.CONTENT_X + MvxmenuLayout.CONTENT_WIDTH, MvxmenuLayout.CONTENT_Y + MvxmenuLayout.CONTENT_HEIGHT,
+        context.fill(layout.contentX(), layout.contentY(),
+                layout.contentX() + layout.contentWidth(), layout.contentY() + layout.contentHeight(),
                 MvxmenuTheme.BG_0);
     }
 
     private void renderSidebar(DrawContext context, int mouseX, int mouseY) {
-        int x = MvxmenuLayout.SIDEBAR_X + 6;
-        int y = MvxmenuLayout.HEADER_HEIGHT + 8;
-        int buttonWidth = MvxmenuLayout.SIDEBAR_WIDTH - 12;
+        int x = layout.sidebarX() + 6;
+        int y = layout.headerHeight() + 8;
+        int buttonWidth = layout.sidebarWidth() - 12;
         int buttonHeight = 32;
         int gap = 4;
 
@@ -246,9 +249,9 @@ public class MvxmenuScreen {
     }
 
     private void renderGenericView(DrawContext context, int mouseX, int mouseY) {
-        int contentX = MvxmenuLayout.CONTENT_X + MvxmenuLayout.PADDING;
-        int contentY = MvxmenuLayout.HEADER_HEIGHT + MvxmenuLayout.PADDING;
-        int panelWidth = MvxmenuLayout.CONTENT_WIDTH - 16;
+        int contentX = layout.contentX() + layout.padding();
+        int contentY = layout.contentY() + layout.padding();
+        int panelWidth = layout.contentWidth() - 16;
 
         context.fill(contentX, contentY, contentX + panelWidth, contentY + 84, MvxmenuTheme.BG_1);
         context.fill(contentX, contentY, contentX + panelWidth, contentY + 2, MvxmenuTheme.AC);
@@ -268,10 +271,10 @@ public class MvxmenuScreen {
     private void renderModuleDetail(DrawContext context, int mouseX, int mouseY) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (textRenderer == null) return;
-        int contentX = MvxmenuLayout.CONTENT_X + MvxmenuLayout.PADDING;
-        int contentY = MvxmenuLayout.HEADER_HEIGHT + MvxmenuLayout.PADDING;
-        context.fill(contentX, contentY, contentX + MvxmenuLayout.CONTENT_WIDTH, contentY + MvxmenuLayout.CONTENT_HEIGHT, MvxmenuTheme.BG_1);
-        context.fill(contentX, contentY, contentX + MvxmenuLayout.CONTENT_WIDTH, contentY + 2, MvxmenuTheme.AC);
+        int contentX = layout.contentX() + layout.padding();
+        int contentY = layout.contentY() + layout.padding();
+        context.fill(contentX, contentY, contentX + layout.contentWidth(), contentY + layout.contentHeight(), MvxmenuTheme.BG_1);
+        context.fill(contentX, contentY, contentX + layout.contentWidth(), contentY + 2, MvxmenuTheme.AC);
 
         ModuleDetailView detailView = getCurrentDetailView();
         if (detailView != null && detailView.getModule() != null) {
@@ -281,28 +284,29 @@ public class MvxmenuScreen {
             context.drawText(textRenderer, module.getDescription(), contentX + 8, contentY + 22, MvxmenuTheme.TX_1, true);
             context.drawText(textRenderer, "STATE // " + (module.isEnabled() ? "ACTIVE" : "IDLE"), contentX + 8, contentY + 34, module.isEnabled() ? MvxmenuTheme.SUCCESS : MvxmenuTheme.DANGER, true);
 
-            if (detailView.hasParameters()) {
+if (detailView.hasParameters()) {
                 context.drawText(textRenderer, "TUNING", contentX + 8, contentY + 52, MvxmenuTheme.AC, true);
                 int y = contentY + 70;
                 for (MvxmenuWidget widget : detailView.getSettingWidgets()) {
                     if (widget instanceof ToggleWidget tw) {
                         context.drawText(textRenderer, tw.getId().replace("module_" + module.getId() + "_", "").replace("_", " ").toUpperCase(), contentX + 8, y, MvxmenuTheme.TX_1, true);
-                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + MvxmenuLayout.CONTENT_WIDTH - 60, y - 2, 40, 24));
+                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + layout.contentWidth() - 60, y - 2, 40, 24));
                         widget.render(context, mouseX, mouseY, 0);
                     } else if (widget instanceof SliderWidget sw) {
                         context.drawText(textRenderer, sw.getLabel() + ": " + sw.getValue(), contentX + 8, y, MvxmenuTheme.TX_1, true);
-                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + 8, y + 16, MvxmenuLayout.CONTENT_WIDTH - 16, 28));
+                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + 8, y + 16, layout.contentWidth() - 16, 28));
                         widget.render(context, mouseX, mouseY, 0);
                         y += 20;
                     } else if (widget instanceof DropdownWidget dw) {
                         context.drawText(textRenderer, dw.getLabel() + ": " + dw.getValue(), contentX + 8, y, MvxmenuTheme.TX_1, true);
-                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + 8, y + 16, MvxmenuLayout.CONTENT_WIDTH - 16, 28));
+                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + 8, y + 16, layout.contentWidth() - 16, 28));
                         widget.render(context, mouseX, mouseY, 0);
                         y += 20;
                     } else if (widget instanceof KeybindWidget kw) {
                         context.drawText(textRenderer, kw.getLabel() + ": " + kw.getValue(), contentX + 8, y, MvxmenuTheme.TX_1, true);
-                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + 8, y + 16, MvxmenuLayout.CONTENT_WIDTH - 16, 28));
+                        widget.setBounds(new MvxmenuLayout.Bounds(contentX + 8, y + 16, layout.contentWidth() - 16, 28));
                         widget.render(context, mouseX, mouseY, 0);
+                        y += 20;
                     }
                     y += 40;
                 }
@@ -313,10 +317,10 @@ public class MvxmenuScreen {
     private void renderSettingsView(DrawContext context, int mouseX, int mouseY) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (textRenderer == null) return;
-        int contentX = MvxmenuLayout.CONTENT_X + MvxmenuLayout.PADDING;
-        int contentY = MvxmenuLayout.HEADER_HEIGHT + MvxmenuLayout.PADDING;
-        context.fill(contentX, contentY, contentX + MvxmenuLayout.CONTENT_WIDTH, contentY + MvxmenuLayout.CONTENT_HEIGHT, MvxmenuTheme.BG_2);
-        context.fill(contentX, contentY, contentX + MvxmenuLayout.CONTENT_WIDTH, contentY + 24, MvxmenuTheme.BD_0);
+        int contentX = layout.contentX() + layout.padding();
+        int contentY = layout.contentY() + layout.padding();
+        context.fill(contentX, contentY, contentX + layout.contentWidth(), contentY + layout.contentHeight(), MvxmenuTheme.BG_2);
+        context.fill(contentX, contentY, contentX + layout.contentWidth(), contentY + 24, MvxmenuTheme.BD_0);
         context.drawText(textRenderer, "SYSTEM // CONFIG", contentX + 8, contentY + 8, MvxmenuTheme.TX_0, true);
 
         int y = contentY + 32;
@@ -335,18 +339,18 @@ public class MvxmenuScreen {
     }
 
     private void renderHeader(DrawContext context) {
-        context.fill(MvxmenuLayout.HEADER_X, MvxmenuLayout.HEADER_Y,
-                MvxmenuLayout.HEADER_X + MvxmenuLayout.HEADER_WIDTH, MvxmenuLayout.HEADER_HEIGHT,
+        context.fill(layout.headerX(), layout.headerY(),
+                layout.headerX() + layout.headerWidth(), layout.headerHeight(),
                 MvxmenuTheme.BG_2);
-        context.fill(MvxmenuLayout.HEADER_X, MvxmenuLayout.HEADER_Y + MvxmenuLayout.HEADER_HEIGHT - 1,
-                MvxmenuLayout.HEADER_X + MvxmenuLayout.HEADER_WIDTH, MvxmenuLayout.HEADER_HEIGHT,
+        context.fill(layout.headerX(), layout.headerY() + layout.headerHeight() - 1,
+                layout.headerX() + layout.headerWidth(), layout.headerHeight(),
                 MvxmenuTheme.BD_1);
-        context.fill(MvxmenuLayout.HEADER_X + 12, MvxmenuLayout.HEADER_Y + 8, MvxmenuLayout.HEADER_X + 18, MvxmenuLayout.HEADER_Y + 16, MvxmenuTheme.AC);
+        context.fill(layout.headerX() + 12, layout.headerY() + 8, layout.headerX() + 18, layout.headerY() + 16, MvxmenuTheme.AC);
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         if (textRenderer != null) {
-            int x = MvxmenuLayout.HEADER_X + 24;
-            int y = MvxmenuLayout.HEADER_Y + 6;
+            int x = layout.headerX() + 24;
+            int y = layout.headerY() + 6;
             context.drawText(textRenderer, "MVX // HUD", x, y, MvxmenuTheme.TX_0, true);
             context.drawText(textRenderer, "LIVE", x + 150, y, MvxmenuTheme.AC, true);
             context.drawText(textRenderer, "SYNCED", x + 190, y, MvxmenuTheme.PURPLE, true);
@@ -354,11 +358,11 @@ public class MvxmenuScreen {
     }
 
     private void renderFooter(DrawContext context) {
-        context.fill(MvxmenuLayout.FOOTER_X, MvxmenuLayout.FOOTER_Y,
-                MvxmenuLayout.FOOTER_X + MvxmenuLayout.FOOTER_WIDTH, MvxmenuLayout.FOOTER_Y + MvxmenuLayout.FOOTER_HEIGHT,
+        context.fill(layout.footerX(), layout.footerY(),
+                layout.footerX() + layout.footerWidth(), layout.footerY() + layout.footerHeight(),
                 MvxmenuTheme.BG_2);
-        context.fill(MvxmenuLayout.FOOTER_X, MvxmenuLayout.FOOTER_Y,
-                MvxmenuLayout.FOOTER_X + MvxmenuLayout.FOOTER_WIDTH, MvxmenuLayout.FOOTER_Y + 1,
+        context.fill(layout.footerX(), layout.footerY(),
+                layout.footerX() + layout.footerWidth(), layout.footerY() + 1,
                 MvxmenuTheme.BD_1);
     }
 
@@ -370,7 +374,7 @@ public class MvxmenuScreen {
                     if (tooltip != null && !tooltip.isEmpty()) {
                         int tx = mouseX + 12;
                         int ty = mouseY - 12;
-                        if (tx + 120 > MvxmenuLayout.SCREEN_WIDTH) tx = mouseX - 132;
+                        if (tx + 120 > layout.screenWidth()) tx = mouseX - 132;
                         if (ty < 4) ty = mouseY + 16;
                         context.fill(tx - 2, ty - 2, tx + 122, ty + 12, 0xDD000000);
                         break;
