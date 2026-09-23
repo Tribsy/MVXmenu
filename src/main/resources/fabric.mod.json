@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "mvxmenu",
+  "version": "${version}",
+  "name": "MVXmenu",
+  "description": "Custom extensible in-game GUI mod for Minecraft Java Edition 1.21.4",
+  "authors": [
+    "MVXmenu"
+  ],
+  "contact": {
+    "homepage": "https://github.com/mvxmenu/mvxmenu",
+    "sources": "https://github.com/mvxmenu/mvxmenu",
+    "issues": "https://github.com/mvxmenu/mvxmenu/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/mvxmenu/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "dev.mvxmenu.Mvxmenu"
+    ],
+    "client": [
+      "dev.mvxmenu.MvxmenuClient"
+    ]
+  },
+  "mixins": [
+    "mixins.mvxmenu.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "fabric-api": "*"
+  }
+}

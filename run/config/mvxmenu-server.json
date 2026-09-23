@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "enforce_server_config": true,
+  "whitelist_enabled": false,
+  "whitelist": [
+    "sprint",
+    "auto_eat",
+    "auto_tool",
+    "no_fall"
+  ],
+  "blacklist": [
+    "kill_aura",
+    "flight",
+    "timer",
+    "freecam",
+    "xray"
+  ],
+  "restricted_modules": [
+    "esp",
+    "scaffold"
+  ],
+  "max_sprint_speed": 130,
+  "max_fly_speed": 150,
+  "max_kill_aura_range": 4,
+  "max_timer_speed": 100,
+  "require_permission_for_admin": true,
+  "log_module_toggles": true
+}

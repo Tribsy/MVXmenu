@@ -1,0 +1,10 @@
+{
+  "description": "Delivers a polished, Minecraft-inspired in-game menu UI system with modular components and interactive prototypes for seamless game mod management and navigation.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

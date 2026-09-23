@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "gui_scale": 0,
+  "theme_accent": "DEFAULT (GREEN)",
+  "blur_effects": true,
+  "scanline_overlay": false,
+  "tick_rate_limit": 100,
+  "render_backend": "AUTO-DETECT",
+  "telemetry": true,
+  "high_contrast": false,
+  "bg_opacity": 90,
+  "custom_accent": -11870592,
+  "use_custom_accent": false,
+  "animation_speed": 100,
+  "panel_rounding": 4
+}

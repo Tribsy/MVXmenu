@@ -1,0 +1,32 @@
+gradle/wrapper/
+build/
+.gradle/
+.caches/
+.idea/
+*.iml
+out/
+bin/
+.cache/
+.vite/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+!.env.example
+
+# Fabric Loom
+.loom/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
