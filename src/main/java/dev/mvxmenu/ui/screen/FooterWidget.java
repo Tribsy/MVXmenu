@@ -85,9 +85,18 @@ public class FooterWidget implements MvxmenuWidget {
         int y = bounds.y + (bounds.height - 10) / 2;
         int x = bounds.x + 12;
 
-        // Version
-        String version = "v1.0.0-rebrand";
-        FontRenderer.drawTextSimple(context, version, x, y, MvxmenuTheme.TX_2, true, "ui");
+        FontRenderer.drawTextSimple(context, "v1.0.0-rebrand", x, y, MvxmenuTheme.TX_2, true, "ui");
+
+        String shortcuts = "[ESC] CLOSE    [ARROWS] NAVIGATE    [ENTER] SELECT    [R] TOGGLE";
+        FontRenderer.drawTextSimple(context, shortcuts, x + 120, y, MvxmenuTheme.TX_2, true, "ui");
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        String fps = client.getCurrentFps() + " FPS";
+        net.minecraft.client.font.TextRenderer tr = client.textRenderer;
+        if (tr != null) {
+            int fpsX = bounds.x + bounds.width - tr.getWidth(fps) - 12;
+            FontRenderer.drawTextSimple(context, fps, fpsX, y, MvxmenuTheme.TX_1, true, "ui");
+        }
     }
 
     @Override

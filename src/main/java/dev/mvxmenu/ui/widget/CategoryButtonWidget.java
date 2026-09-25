@@ -97,22 +97,11 @@ public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
             bgColor = MvxmenuTheme.BG_1;
         }
 
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_BUTTON, bgColor);
 
-        // Top accent indicator
-        if (active || hovered) {
-            int accentAlpha = active ? 255 : (int)(255 * hoverProgress);
-            int accentColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (accentAlpha << 24);
-            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + bounds.width - 2, bounds.y + 4, accentColor);
-        }
-
-        // Bottom border
-        int bottomColor = active ? MvxmenuTheme.AC : MvxmenuTheme.BD_1;
-        context.fill(bounds.x, bounds.y + bounds.height - 2, bounds.x + bounds.width, bounds.y + bounds.height, bottomColor);
-
-        // Left active bar
         if (active) {
-            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + 4, bounds.y + bounds.height - 2, MvxmenuTheme.AC);
+            context.fill(bounds.x + 2, bounds.y + 4, bounds.x + 4, bounds.y + bounds.height - 4, MvxmenuTheme.AC);
         }
 
         // Icon (SVG)

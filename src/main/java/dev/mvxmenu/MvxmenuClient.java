@@ -149,6 +149,12 @@ public class MvxmenuClient implements ClientModInitializer {
         }
 
         @Override
+        public void init() {
+            super.init();
+            mvxmenuScreen.init();
+        }
+
+        @Override
         public void render(DrawContext context, int mouseX, int mouseY, float delta) {
             mvxmenuScreen.render(context, mouseX, mouseY, delta);
         }
@@ -160,7 +166,14 @@ public class MvxmenuClient implements ClientModInitializer {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            return mvxmenuScreen.keyPressed(keyCode, scanCode, modifiers);
+            if (mvxmenuScreen.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                close();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override

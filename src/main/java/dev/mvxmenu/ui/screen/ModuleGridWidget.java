@@ -75,8 +75,8 @@ public class ModuleGridWidget implements MvxmenuWidget {
         int gapX = layout.moduleCardGap();
         int gapY = layout.moduleCardGap();
 
-        int startX = bounds.x;
-        int startY = bounds.y;
+        int startX = bounds.x + 8;
+        int startY = bounds.y + 8;
 
         int col = 0;
         int row = 0;

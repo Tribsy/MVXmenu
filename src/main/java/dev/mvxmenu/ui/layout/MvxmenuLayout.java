@@ -56,6 +56,24 @@ public class MvxmenuLayout {
         return scaledHeight > 0 ? Math.min(SHELL_HEIGHT, scaledHeight) : SHELL_HEIGHT;
     }
 
+    public int viewportWidth() {
+        int scaledWidth = getScaledWidthSafe();
+        return scaledWidth > 0 ? scaledWidth : SHELL_WIDTH;
+    }
+
+    public int viewportHeight() {
+        int scaledHeight = getScaledHeightSafe();
+        return scaledHeight > 0 ? scaledHeight : SHELL_HEIGHT;
+    }
+
+    public int shellX() {
+        return Math.max(0, (viewportWidth() - screenWidth()) / 2);
+    }
+
+    public int shellY() {
+        return Math.max(0, (viewportHeight() - screenHeight()) / 2);
+    }
+
     private int getScaledWidthSafe() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null || client.getWindow() == null) {

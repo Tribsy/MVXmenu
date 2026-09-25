@@ -52,17 +52,17 @@ public class SidebarWidget implements MvxmenuWidget {
         if (bounds == null) return;
 
         int x = bounds.x + 8;
-        int y = bounds.y + 8;
+        int y = bounds.y + 40;
         int buttonWidth = bounds.width - 16;
         int buttonHeight = 32;
         int gap = 4;
 
-        // Search field
-        searchField = new TextFieldWidget("sidebar_search", "SCAN MODULES... (enabled: | disabled:)", 32);
+        if (searchField == null) {
+            searchField = new TextFieldWidget("sidebar_search", "SCAN MODULES...", 32);
+        }
         searchField.setBounds(new MvxmenuLayout.Bounds(x, y, buttonWidth, 28));
         y += 36;
 
-        // Category buttons
         for (Module.Category cat : categories) {
             String catName = cat.getDisplayName().toUpperCase();
             CategoryButtonWidget btn = categoryButtons.get(catName);
@@ -72,9 +72,10 @@ public class SidebarWidget implements MvxmenuWidget {
             }
         }
 
-        // Settings button (at bottom)
         int settingsY = bounds.y + bounds.height - buttonHeight - 8;
-        settingsButton = new CategoryButtonWidget("sidebar_settings", "SYSTEM", MvxmenuIcons.CLOCK);
+        if (settingsButton == null) {
+            settingsButton = new CategoryButtonWidget("sidebar_settings", "SYSTEM", MvxmenuIcons.CLOCK);
+        }
         settingsButton.setBounds(new MvxmenuLayout.Bounds(x, settingsY, buttonWidth, buttonHeight));
     }
 

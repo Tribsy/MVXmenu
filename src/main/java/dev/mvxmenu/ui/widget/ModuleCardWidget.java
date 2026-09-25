@@ -25,6 +25,7 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
     private boolean visible = true;
     private boolean focused;
     private Module module;
+    private boolean lastClickWasToggle;
 
     // Animation progress
     private float hoverProgress = 0f;
@@ -53,6 +54,12 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
         this.name = module.getDisplayName();
         this.description = module.getDescription();
         this.enabled = module.isEnabled();
+    }
+
+    public boolean consumeToggleClick() {
+        boolean toggle = lastClickWasToggle;
+        lastClickWasToggle = false;
+        return toggle;
     }
 
     @Override
@@ -99,9 +106,12 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
     public boolean mouseClicked(double x, double y, int button) {
         if (bounds == null || !bounds.contains((int) x, (int) y)) return false;
         if (disabled) return false;
-        enabled = !enabled;
-        if (module != null) {
-            module.setEnabled(enabled);
+        lastClickWasToggle = x >= bounds.x + bounds.width - 48;
+        if (lastClickWasToggle) {
+            enabled = !enabled;
+            if (module != null) {
+                module.setEnabled(enabled);
+            }
         }
         return true;
     }

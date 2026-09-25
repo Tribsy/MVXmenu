@@ -117,6 +117,8 @@ public class MvxmenuScreen {
     }
 
     private void recalculateLayout() {
+        int originX = layout.shellX();
+        int originY = layout.shellY();
         int screenW = layout.screenWidth();
         int screenH = layout.screenHeight();
         int sidebarW = layout.sidebarWidth();
@@ -124,34 +126,36 @@ public class MvxmenuScreen {
         int footerH = layout.footerHeight();
         int padding = layout.padding();
 
-        // Header: full width, top
-        headerWidget.setBounds(new MvxmenuLayout.Bounds(0, 0, screenW, headerH));
+        headerWidget.setBounds(new MvxmenuLayout.Bounds(originX, originY, screenW, headerH));
 
-        // Sidebar: left side, full height minus header/footer
         int sidebarH = screenH - headerH - footerH;
-        sidebarWidget.setBounds(new MvxmenuLayout.Bounds(0, headerH, sidebarW, sidebarH));
+        sidebarWidget.setBounds(new MvxmenuLayout.Bounds(originX, originY + headerH, sidebarW, sidebarH));
 
-        // Content panel: right side
-        int contentX = sidebarW + padding;
-        int contentY = headerH + padding;
+        int contentX = originX + sidebarW + padding;
+        int contentY = originY + headerH + padding;
         int contentW = screenW - sidebarW - padding * 2;
         int contentH = screenH - headerH - footerH - padding * 2;
         contentPanelWidget.setBounds(new MvxmenuLayout.Bounds(contentX, contentY, contentW, contentH));
 
-        // Footer: bottom full width
-        footerWidget.setBounds(new MvxmenuLayout.Bounds(0, screenH - footerH, screenW, footerH));
+        footerWidget.setBounds(new MvxmenuLayout.Bounds(originX, originY + screenH - footerH, screenW, footerH));
     }
 
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.delta = delta;
+        recalculateLayout();
 
-        // Window background (rounded rx=19)
+        int viewportW = layout.viewportWidth();
+        int viewportH = layout.viewportHeight();
+        context.fill(0, 0, viewportW, viewportH, 0xCC060606);
+
+        int originX = layout.shellX();
+        int originY = layout.shellY();
         int screenW = layout.screenWidth();
         int screenH = layout.screenHeight();
-        RoundedRectRenderer.render(context, 0, 0, screenW, screenH, MvxmenuTheme.R_WINDOW, MvxmenuTheme.BG_0);
-
-        // Window border (purple top accent)
-        context.fill(0, 0, screenW, 2, MvxmenuTheme.AC);
+        RoundedRectRenderer.render(context, originX, originY, screenW, screenH, MvxmenuTheme.R_WINDOW, MvxmenuTheme.BG_0);
+        RoundedRectRenderer.renderBorder(context, originX, originY, screenW, screenH,
+                MvxmenuTheme.R_WINDOW, 1, MvxmenuTheme.AC_BORDER, MvxmenuTheme.BG_0);
+        context.fill(originX, originY, originX + screenW, originY + 2, MvxmenuTheme.AC);
 
         // Render root widgets (shell)
         for (MvxmenuWidget w : rootWidgets) {
@@ -326,17 +330,18 @@ public class MvxmenuScreen {
     }
 
     private void handleModuleClick(ModuleCardWidget card) {
-        Module module = card.getModule();
-        if (module != null) {
-            boolean nextState = !module.isEnabled();
-            module.setEnabled(nextState);
-            if (nextState) {
-                module.onEnable();
-            } else {
-                module.onDisable();
+        if (card.consumeToggleClick()) {
+            Module module = card.getModule();
+            if (module != null) {
+                boolean nextState = module.isEnabled();
+                if (nextState) {
+                    module.onEnable();
+                } else {
+                    module.onDisable();
+                }
+                MvxmenuNetworking.sendModuleToggleToServer(module.getId().toString(), nextState);
             }
-            card.setEnabled(nextState);
-            MvxmenuNetworking.sendModuleToggleToServer(module.getId().toString(), nextState);
+            return;
         }
         showModuleDetail(card);
     }
@@ -385,10 +390,12 @@ public class MvxmenuScreen {
             }
         }
 
-        // Global ESC - go back
-        if (keyCode == 1) {
-            goBack();
-            return true;
+        if (keyCode == 1 || keyCode == 256) {
+            if (settingsActive || selectedModule != null) {
+                goBack();
+                return true;
+            }
+            return false;
         }
 
         // Enter on selected module

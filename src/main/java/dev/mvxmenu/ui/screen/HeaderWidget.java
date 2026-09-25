@@ -6,10 +6,10 @@ import dev.mvxmenu.theme.FontRenderer;
 import dev.mvxmenu.theme.MvxmenuIcons;
 import dev.mvxmenu.theme.MvxmenuTheme;
 import dev.mvxmenu.theme.RoundedRectRenderer;
-import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.PlayerListEntry;
 
 /**
  * Header widget - brand logo, title, status badges.
@@ -93,15 +93,43 @@ public class HeaderWidget implements MvxmenuWidget {
         context.fill(bounds.x, bounds.y + bounds.height - 1,
                 bounds.x + bounds.width, bounds.y + bounds.height, MvxmenuTheme.BD_1);
 
-        // Brand logo (shield icon) + title
         int logoX = bounds.x + 12;
         int logoY = bounds.y + (bounds.height - 24) / 2;
         MvxmenuIcons.SHIELD.render(context, logoX, logoY, 24, MvxmenuTheme.AC);
 
-        // Title text
         int titleX = logoX + 24 + 8;
         int titleY = bounds.y + (bounds.height - 12) / 2;
         FontRenderer.drawTextSimple(context, "MVX // HUD", titleX, titleY, MvxmenuTheme.TX_0, true, "ui");
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        int fps = client.getCurrentFps();
+        int ping = 0;
+        if (client.player != null) {
+            ClientPlayNetworkHandler handler = client.getNetworkHandler();
+            if (handler != null) {
+                PlayerListEntry entry = handler.getPlayerListEntry(client.player.getUuid());
+                if (entry != null) {
+                    ping = entry.getLatency();
+                }
+            }
+        }
+
+        int rightX = bounds.x + bounds.width - 12;
+        rightX = drawBadge(context, rightX, bounds.y + (bounds.height - 16) / 2, ping + " MS", MvxmenuTheme.TX_1, MvxmenuTheme.BG_4);
+        rightX = drawBadge(context, rightX, bounds.y + (bounds.height - 16) / 2, fps + " FPS", MvxmenuTheme.SUCCESS, MvxmenuTheme.SUCCESS_BG);
+        rightX = drawBadge(context, rightX, bounds.y + (bounds.height - 16) / 2, "SYNCED", MvxmenuTheme.INFO, MvxmenuTheme.INFO_BG);
+        drawBadge(context, rightX, bounds.y + (bounds.height - 16) / 2, "LIVE", MvxmenuTheme.SUCCESS, MvxmenuTheme.SUCCESS_BG);
+    }
+
+    private int drawBadge(DrawContext context, int rightEdge, int y, String text, int textColor, int bgColor) {
+        net.minecraft.client.font.TextRenderer tr = MinecraftClient.getInstance().textRenderer;
+        if (tr == null) return rightEdge;
+        int padding = 6;
+        int width = tr.getWidth(text) + padding * 2;
+        int x = rightEdge - width;
+        RoundedRectRenderer.render(context, x, y, width, 16, MvxmenuTheme.R_BADGE, bgColor);
+        FontRenderer.drawTextSimple(context, text, x + padding, y + 4, textColor, true, "ui");
+        return x - 8;
     }
 
     @Override
