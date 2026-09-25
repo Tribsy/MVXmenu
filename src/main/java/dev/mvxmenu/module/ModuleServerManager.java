@@ -46,7 +46,7 @@ public class ModuleServerManager {
         }
 
         if (enabled) {
-            Module module = ModuleRegistry.get().get(moduleId);
+            Module module = ModuleRegistry.get().get(ModuleId.from(moduleId));
             if (module != null) {
                 validateModuleSettings(module);
             }
@@ -62,9 +62,9 @@ public class ModuleServerManager {
     public void sendAllowedModules(ServerPlayerEntity player) {
         ModuleRegistry registry = ModuleRegistry.get();
         for (Module module : registry.getAll()) {
-            boolean allowed = isModuleAllowed(player, module.getId());
-            boolean restricted = isModuleRestricted(player, module.getId());
-            MvxmenuNetworking.sendModuleToggle(player, module.getId(), allowed);
+            boolean allowed = isModuleAllowed(player, module.getId().toString());
+            boolean restricted = isModuleRestricted(player, module.getId().toString());
+            MvxmenuNetworking.sendModuleToggle(player, module.getId().toString(), allowed);
         }
     }
 
@@ -72,7 +72,7 @@ public class ModuleServerManager {
         if (!config.isEnforceServerConfig()) return;
 
         for (Setting<?> setting : module.getSettings()) {
-            int maxValue = config.getMaxValueForModule(module.getId(), setting.getId());
+            int maxValue = config.getMaxValueForModule(module.getId().toString(), setting.getId());
             if (maxValue != Integer.MAX_VALUE) {
                 if (setting instanceof IntegerSetting is) {
                     int current = is.getValue();

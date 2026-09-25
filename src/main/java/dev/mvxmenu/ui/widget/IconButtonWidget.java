@@ -3,22 +3,39 @@ package dev.mvxmenu.ui.widget;
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
 import dev.mvxmenu.theme.MvxmenuTheme;
 import dev.mvxmenu.theme.MvxmenuIcons;
+import dev.mvxmenu.theme.RoundedRectRenderer;
+import dev.mvxmenu.theme.FontRenderer;
+import dev.mvxmenu.util.MathUtil;
 import net.minecraft.client.gui.DrawContext;
 
 public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
 
     private String id;
     private MvxmenuLayout.Bounds bounds;
-    private String iconName;
+    private MvxmenuIcons icon;
     private boolean active;
     private boolean disabled;
     private boolean visible = true;
     private boolean hovered;
     private boolean focused;
+    private String tooltip;
+
+    // Animation
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
+
+    public IconButtonWidget(String id, MvxmenuIcons icon) {
+        this.id = id;
+        this.icon = icon;
+    }
 
     public IconButtonWidget(String id, String iconName) {
         this.id = id;
-        this.iconName = iconName;
+        try {
+            this.icon = MvxmenuIcons.valueOf(iconName);
+        } catch (IllegalArgumentException e) {
+            this.icon = MvxmenuIcons.SHIELD;
+        }
     }
 
     @Override
@@ -43,6 +60,7 @@ public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
 
     @Override
     public void setEnabled(boolean enabled) {
+        this.disabled = !enabled;
     }
 
     @Override
@@ -70,6 +88,10 @@ public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if ((keyCode == 257 || keyCode == 32) && focused && !disabled) { // Enter or Space
+            active = !active;
+            return true;
+        }
         return false;
     }
 
@@ -77,20 +99,49 @@ public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int bgColor = active ? MvxmenuTheme.AC_DIM : (hovered || focused) ? MvxmenuTheme.BG_2 : MvxmenuTheme.BG_1;
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
-        MvxmenuIcons icon = MvxmenuIcons.valueOf(iconName);
-        if (icon != null) {
-            icon.render(context, bounds.x + 4, bounds.y + 4, 24, getTintColor());
+
+        hoverProgress = MathUtil.lerp(hoverProgress, hovered ? 1f : 0f, delta * 10f);
+        focusProgress = MathUtil.lerp(focusProgress, focused ? 1f : 0f, delta * 10f);
+
+        int bgColor;
+        if (disabled) {
+            bgColor = MvxmenuTheme.BG_1;
+        } else if (active) {
+            bgColor = MvxmenuTheme.AC_DIM;
+        } else {
+            bgColor = MathUtil.lerpColor(MvxmenuTheme.BG_1, MvxmenuTheme.BG_2, hoverProgress);
         }
+
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_BUTTON, bgColor);
+
+        if (active || hovered) {
+            int accentAlpha = active ? 255 : (int)(255 * hoverProgress);
+            int accentColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (accentAlpha << 24);
+            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + bounds.width - 2, bounds.y + 4, accentColor);
+        }
+
+        // Icon
+        int iconSize = Math.min(bounds.width, bounds.height) - 8;
+        int iconX = bounds.x + (bounds.width - iconSize) / 2;
+        int iconY = bounds.y + (bounds.height - iconSize) / 2;
+        int iconColor = getTintColor();
+        icon.render(context, iconX, iconY, iconSize, iconColor);
+
+        // Focus ring
         if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2, MvxmenuTheme.AC);
+            int ringAlpha = (int) (255 * focusProgress);
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    bounds.x - 2, bounds.y - 2,
+                    bounds.width + 4, bounds.height + 4,
+                    MvxmenuTheme.R_BUTTON + 2, 2, ringColor, bgColor);
         }
     }
 
     @Override
     public String getTooltipText(int mouseX, int mouseY) {
-        return iconName;
+        return tooltip != null ? tooltip : (icon != null ? icon.name() : id);
     }
 
     @Override
@@ -100,7 +151,8 @@ public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
 
     @Override
     public String getNarrationText() {
-        return "Icon button " + iconName + (active ? " active" : " inactive") + (disabled ? " disabled" : "");
+        String name = icon != null ? icon.name() : id;
+        return "Icon button " + name + (active ? " active" : " inactive") + (disabled ? " disabled" : "");
     }
 
     @Override
@@ -118,8 +170,32 @@ public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
         this.focused = focused;
     }
 
-    public String getIconName() {
-        return iconName;
+    @Override
+    public float getHoverProgress() {
+        return hoverProgress;
+    }
+
+    @Override
+    public void setHoverProgress(float progress) {
+        this.hoverProgress = progress;
+    }
+
+    @Override
+    public float getFocusProgress() {
+        return focusProgress;
+    }
+
+    @Override
+    public void setFocusProgress(float progress) {
+        this.focusProgress = progress;
+    }
+
+    public MvxmenuIcons getIcon() {
+        return icon;
+    }
+
+    public void setIcon(MvxmenuIcons icon) {
+        this.icon = icon;
     }
 
     public boolean isActive() {
@@ -136,6 +212,10 @@ public class IconButtonWidget implements MvxmenuWidget, NarratableWidget {
 
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
+    }
+
+    public void setTooltip(String tooltip) {
+        this.tooltip = tooltip;
     }
 
     public int getTintColor() {

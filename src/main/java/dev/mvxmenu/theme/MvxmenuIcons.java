@@ -2,6 +2,11 @@ package dev.mvxmenu.theme;
 
 import net.minecraft.client.gui.DrawContext;
 
+/**
+ * Icon renderer using geometric shapes (fallback for Minecraft 1.21.4).
+ * Replaces the old geometric fill() based rendering with new theme colors.
+ * TODO: Replace with VertexConsumer SVG path rendering when API is available.
+ */
 public enum MvxmenuIcons {
     SHIELD,
     CROSSHAIR,
@@ -20,6 +25,9 @@ public enum MvxmenuIcons {
     BELL,
     DATABASE;
 
+    /**
+     * Renders the icon at the specified position and size using geometric shapes.
+     */
     public void render(DrawContext context, int x, int y, int size, int color) {
         int s = size / 4;
         switch (this) {
@@ -102,16 +110,16 @@ public enum MvxmenuIcons {
     }
 
     public static MvxmenuIcons fromCategoryName(String category) {
-        switch (category) {
-            case "COMBAT": return CROSSHAIR;
-            case "MOVEMENT": return ZAP;
-            case "PLAYER": return EYE;
-            case "RENDER": return LAYERS;
-            case "WORLD": return MAP;
-            case "EXPLOIT": return SHIELD;
-            case "MISC": return SLIDERS;
-            default: return SHIELD;
-        }
+        return switch (category) {
+            case "COMBAT" -> CROSSHAIR;
+            case "MOVEMENT" -> ZAP;
+            case "PLAYER" -> EYE;
+            case "RENDER" -> LAYERS;
+            case "WORLD" -> MAP;
+            case "EXPLOIT" -> SHIELD;
+            case "MISC" -> SLIDERS;
+            default -> SHIELD;
+        };
     }
 
     public static int renderSize(int guiScale) {

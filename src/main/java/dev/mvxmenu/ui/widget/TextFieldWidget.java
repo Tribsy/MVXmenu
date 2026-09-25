@@ -2,6 +2,8 @@ package dev.mvxmenu.ui.widget;
 
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
 import dev.mvxmenu.theme.MvxmenuTheme;
+import dev.mvxmenu.theme.RoundedRectRenderer;
+import dev.mvxmenu.theme.FontRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.font.TextRenderer;
@@ -17,6 +19,11 @@ public class TextFieldWidget implements MvxmenuWidget, NarratableWidget {
     private boolean hovered;
     private int cursorPosition;
     private int maxLength;
+
+    // Animation
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
+    private long cursorBlinkTime = 0;
 
     public TextFieldWidget(String id, String placeholder, int maxLength) {
         this.id = id;
@@ -47,8 +54,7 @@ public class TextFieldWidget implements MvxmenuWidget, NarratableWidget {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
-    }
+    public void setEnabled(boolean enabled) {}
 
     @Override
     public boolean isVisible() {
@@ -89,9 +95,18 @@ public class TextFieldWidget implements MvxmenuWidget, NarratableWidget {
             focused = false;
             return true;
         }
+        if (keyCode == 263 && cursorPosition > 0) { // Left arrow
+            cursorPosition--;
+            return true;
+        }
+        if (keyCode == 262 && cursorPosition < text.length()) { // Right arrow
+            cursorPosition++;
+            return true;
+        }
         return false;
     }
 
+    @Override
     public boolean charTyped(char codePoint, int modifiers) {
         if (!focused) return false;
         if (text.length() >= maxLength) return false;
@@ -107,22 +122,45 @@ public class TextFieldWidget implements MvxmenuWidget, NarratableWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int bgColor = focused ? MvxmenuTheme.BG_2 : hovered ? MvxmenuTheme.BG_1 : MvxmenuTheme.BG_0;
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
-        context.fill(bounds.x, bounds.y + bounds.height - 2, bounds.x + bounds.width, bounds.y + bounds.height, focused ? MvxmenuTheme.AC : MvxmenuTheme.BD_1);
-        
+
+        hoverProgress = lerp(hoverProgress, hovered ? 1f : 0f, delta * 10f);
+        focusProgress = lerp(focusProgress, focused ? 1f : 0f, delta * 10f);
+
+        // Background
+        int bgColor = lerpColor(MvxmenuTheme.BG_0, MvxmenuTheme.BG_2, Math.max(hoverProgress, focusProgress * 0.5f));
+        if (focused) bgColor = MvxmenuTheme.BG_2;
+
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_INPUT, bgColor);
+
+        // Bottom border (accent when focused)
+        int borderColor = lerpColor(MvxmenuTheme.BD_1, MvxmenuTheme.AC, focusProgress);
+        context.fill(bounds.x, bounds.y + bounds.height - 2, bounds.x + bounds.width, bounds.y + bounds.height, borderColor);
+
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        String displayText = text.isEmpty() && !focused ? placeholder : text;
-        int textColor = text.isEmpty() && !focused ? MvxmenuTheme.TX_2 : MvxmenuTheme.TX_0;
-        context.drawText(textRenderer, displayText, bounds.x + 6, bounds.y + (bounds.height - 8) / 2, textColor, true);
-        
-        if (focused && (System.currentTimeMillis() / 500) % 2 == 0) {
-            int cursorX = bounds.x + 6 + getTextWidth(textRenderer, text.substring(0, cursorPosition));
-            context.fill(cursorX, bounds.y + 4, cursorX + 1, bounds.y + bounds.height - 4, MvxmenuTheme.AC);
+        if (textRenderer != null) {
+            String displayText = text.isEmpty() && !focused ? placeholder : text;
+            int textColor = text.isEmpty() && !focused ? MvxmenuTheme.TX_2 : MvxmenuTheme.TX_0;
+            FontRenderer.drawTextSimple(context, displayText, bounds.x + 8, bounds.y + (bounds.height - 10) / 2, textColor, true, "ui");
+
+            // Cursor blink
+            if (focused) {
+                cursorBlinkTime += (long)(delta * 1000);
+                if ((cursorBlinkTime / 500) % 2 == 0) {
+                    int cursorX = bounds.x + 8 + getTextWidth(textRenderer, text.substring(0, cursorPosition));
+                    context.fill(cursorX, bounds.y + 4, cursorX + 1, bounds.y + bounds.height - 4, MvxmenuTheme.AC);
+                }
+            }
         }
-        
+
+        // Focus ring
         if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2, MvxmenuTheme.AC);
+            int ringAlpha = (int) (255 * focusProgress);
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    bounds.x - 2, bounds.y - 2,
+                    bounds.width + 4, bounds.height + 4,
+                    MvxmenuTheme.R_INPUT + 2, 2, ringColor, bgColor);
         }
     }
 
@@ -160,6 +198,26 @@ public class TextFieldWidget implements MvxmenuWidget, NarratableWidget {
         this.focused = focused;
     }
 
+    @Override
+    public float getHoverProgress() {
+        return hoverProgress;
+    }
+
+    @Override
+    public void setHoverProgress(float progress) {
+        this.hoverProgress = progress;
+    }
+
+    @Override
+    public float getFocusProgress() {
+        return focusProgress;
+    }
+
+    @Override
+    public void setFocusProgress(float progress) {
+        this.focusProgress = progress;
+    }
+
     public String getText() {
         return text;
     }
@@ -171,5 +229,18 @@ public class TextFieldWidget implements MvxmenuWidget, NarratableWidget {
 
     public String getPlaceholder() {
         return placeholder;
+    }
+
+    private float lerp(float a, float b, float t) {
+        return a + (b - a) * Math.min(1f, t);
+    }
+
+    private int lerpColor(int from, int to, float t) {
+        t = Math.min(1f, Math.max(0f, t));
+        int r = (int) ((((from >> 16) & 0xFF) * (1 - t)) + (((to >> 16) & 0xFF) * t));
+        int g = (int) ((((from >> 8) & 0xFF) * (1 - t)) + (((to >> 8) & 0xFF) * t));
+        int b = (int) (((from & 0xFF) * (1 - t)) + ((to & 0xFF) * t));
+        int a = (int) ((((from >> 24) & 0xFF) * (1 - t)) + (((to >> 24) & 0xFF) * t));
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 }

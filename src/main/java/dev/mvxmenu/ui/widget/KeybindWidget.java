@@ -3,6 +3,9 @@ package dev.mvxmenu.ui.widget;
 import dev.mvxmenu.networking.MvxmenuNetworking;
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
 import dev.mvxmenu.theme.MvxmenuTheme;
+import dev.mvxmenu.theme.RoundedRectRenderer;
+import dev.mvxmenu.theme.FontRenderer;
+import dev.mvxmenu.util.MathUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -17,6 +20,11 @@ public class KeybindWidget implements MvxmenuWidget, NarratableWidget {
     private boolean visible = true;
     private boolean hovered;
     private boolean focused;
+
+    // Animation
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
+    private float listenProgress = 0f;
 
     public KeybindWidget(String id, String label, String initial) {
         this.id = id;
@@ -45,8 +53,7 @@ public class KeybindWidget implements MvxmenuWidget, NarratableWidget {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
-    }
+    public void setEnabled(boolean enabled) {}
 
     @Override
     public boolean isVisible() {
@@ -73,7 +80,7 @@ public class KeybindWidget implements MvxmenuWidget, NarratableWidget {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!listening) return false;
-        if (keyCode == 1) {
+        if (keyCode == 1) { // ESC = unbind
             listening = false;
             value = "UNBOUND";
             MvxmenuNetworking.sendKeybindUpdateToServer(id, value);
@@ -89,11 +96,44 @@ public class KeybindWidget implements MvxmenuWidget, NarratableWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int bgColor = listening ? MvxmenuTheme.AC_DIM : (hovered || focused) ? MvxmenuTheme.BG_2 : MvxmenuTheme.BG_1;
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
-        context.fill(bounds.x, bounds.y, bounds.x + 2, bounds.y + bounds.height, MvxmenuTheme.AC);
-        if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2, MvxmenuTheme.AC);
+
+        hoverProgress = MathUtil.lerp(hoverProgress, hovered ? 1f : 0f, delta * 10f);
+        focusProgress = MathUtil.lerp(focusProgress, focused ? 1f : 0f, delta * 10f);
+        listenProgress = MathUtil.lerp(listenProgress, listening ? 1f : 0f, delta * 15f);
+
+        int bgColor;
+        int borderColor;
+
+        if (listening) {
+            bgColor = MvxmenuTheme.AC_DIM;
+            borderColor = MvxmenuTheme.AC;
+        } else if (hovered || focused) {
+            bgColor = MathUtil.lerpColor(MvxmenuTheme.BG_1, MvxmenuTheme.BG_2, hoverProgress);
+            borderColor = MvxmenuTheme.AC;
+        } else {
+            bgColor = MvxmenuTheme.BG_1;
+            borderColor = MvxmenuTheme.BD_1;
+        }
+
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_INPUT, bgColor);
+
+        RoundedRectRenderer.renderBorder(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_INPUT, 1, borderColor, bgColor);
+
+        // Value text
+        String displayValue = listening ? "PRESS KEY..." : value;
+        int textColor = listening ? MvxmenuTheme.AC : MvxmenuTheme.TX_0;
+        FontRenderer.drawTextSimple(context, displayValue, bounds.x + 8, bounds.y + (bounds.height - 10) / 2, textColor, true, "ui");
+
+        // Focus ring
+        if (focused || listening) {
+            int ringAlpha = (int) (255 * Math.max(focusProgress, listenProgress));
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    bounds.x - 2, bounds.y - 2,
+                    bounds.width + 4, bounds.height + 4,
+                    MvxmenuTheme.R_INPUT + 2, 2, ringColor, bgColor);
         }
     }
 
@@ -128,6 +168,26 @@ public class KeybindWidget implements MvxmenuWidget, NarratableWidget {
         this.focused = focused;
     }
 
+    @Override
+    public float getHoverProgress() {
+        return hoverProgress;
+    }
+
+    @Override
+    public void setHoverProgress(float progress) {
+        this.hoverProgress = progress;
+    }
+
+    @Override
+    public float getFocusProgress() {
+        return focusProgress;
+    }
+
+    @Override
+    public void setFocusProgress(float progress) {
+        this.focusProgress = progress;
+    }
+
     public String getValue() {
         return value;
     }
@@ -145,6 +205,31 @@ public class KeybindWidget implements MvxmenuWidget, NarratableWidget {
     }
 
     private String formatKey(int keyCode) {
+        if (keyCode >= 290 && keyCode <= 301) { // F1-F12
+            return "F" + (keyCode - 289);
+        }
+        if (keyCode >= 256 && keyCode <= 265) { // Arrow keys, etc
+            return switch (keyCode) {
+                case 256 -> "ESC";
+                case 257 -> "ENTER";
+                case 258 -> "TAB";
+                case 259 -> "BACKSPACE";
+                case 260 -> "INSERT";
+                case 261 -> "DELETE";
+                case 262 -> "RIGHT";
+                case 263 -> "LEFT";
+                case 264 -> "DOWN";
+                case 265 -> "UP";
+                case 266 -> "PAGE_UP";
+                case 267 -> "PAGE_DOWN";
+                case 268 -> "HOME";
+                case 269 -> "END";
+                default -> "KEY:" + keyCode;
+            };
+        }
+        if (keyCode >= 32 && keyCode <= 126) {
+            return String.valueOf((char) keyCode).toUpperCase();
+        }
         return "KEY:" + keyCode;
     }
 }

@@ -44,6 +44,21 @@ public interface MvxmenuWidget {
     default void setFocused(boolean focused) {
     }
 
+    // Animation state for smooth transitions
+    default float getHoverProgress() {
+        return 0f;
+    }
+
+    default void setHoverProgress(float progress) {
+    }
+
+    default float getFocusProgress() {
+        return 0f;
+    }
+
+    default void setFocusProgress(float progress) {
+    }
+
     enum Type {
         BUTTON,
         TOGGLE,

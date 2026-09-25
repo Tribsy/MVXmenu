@@ -21,11 +21,11 @@
     ],
     "client": [
       "dev.mvxmenu.MvxmenuClient"
+    ],
+    "mvxmenu:modules": [
+      "dev.mvxmenu.module.impl.BuiltInModuleProvider"
     ]
   },
-  "mixins": [
-    "mixins.mvxmenu.json"
-  ],
   "depends": {
     "fabricloader": ">=0.19.5",
     "minecraft": "~1.21.4",

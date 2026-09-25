@@ -18,8 +18,8 @@ class MvxmenuConfigSerializerTest {
         MvxmenuConfig config = serializer.load();
 
         assertEquals("1.0.0", config.getVersion());
-        assertEquals(0, config.getGuiScale());
-        assertEquals("DEFAULT (GREEN)", config.getThemeAccent());
+        assertEquals(3, config.getGuiScale());
+        assertEquals("DEFAULT (PURPLE)", config.getThemeAccent());
         assertTrue(config.isBlurEffects());
         assertFalse(config.isScanlineOverlay());
         assertEquals(100, config.getTickRateLimit());

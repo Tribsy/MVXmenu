@@ -4,6 +4,7 @@ import dev.mvxmenu.MvxmenuClient;
 import dev.mvxmenu.config.MvxmenuConfig;
 import dev.mvxmenu.config.MvxmenuConfigSerializer;
 import dev.mvxmenu.module.Module;
+import dev.mvxmenu.module.ModuleId;
 import dev.mvxmenu.module.ModuleRegistry;
 import dev.mvxmenu.ui.widget.ModuleCardWidget;
 import dev.mvxmenu.ui.widget.MvxmenuWidget;
@@ -19,7 +20,7 @@ public class MvxmenuClientNetworkHandler {
         LOGGER.info("Received module state sync: {} = {}", payload.moduleId(), payload.enabled());
         MvxmenuClient client = MvxmenuClient.getInstance();
         ModuleRegistry registry = ModuleRegistry.get();
-        Module module = registry.get(payload.moduleId());
+        Module module = registry.get(ModuleId.from(payload.moduleId()));
         if (module != null) {
             module.setEnabled(payload.enabled());
             if (payload.enabled()) {

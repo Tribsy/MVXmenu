@@ -12,11 +12,11 @@ public class MvxmenuConfig {
 
     @Expose
     @SerializedName("gui_scale")
-    private int guiScale = 0;
+    private int guiScale = 3;
 
     @Expose
     @SerializedName("theme_accent")
-    private String themeAccent = "DEFAULT (GREEN)";
+    private String themeAccent = "DEFAULT (PURPLE)";
 
     @Expose
     @SerializedName("blur_effects")
@@ -48,7 +48,7 @@ public class MvxmenuConfig {
 
     @Expose
     @SerializedName("custom_accent")
-    private int customAccent = 0xFF4ADE80;
+    private int customAccent = 0xFF8B5CF6;
 
     @Expose
     @SerializedName("use_custom_accent")
@@ -60,7 +60,7 @@ public class MvxmenuConfig {
 
     @Expose
     @SerializedName("panel_rounding")
-    private int panelRounding = 4;
+    private int panelRounding = 12;
 
     public MvxmenuConfig() {
     }

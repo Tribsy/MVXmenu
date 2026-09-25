@@ -1,43 +1,44 @@
 {
-  "version": 2,
+  "version": 3,
   "layout": {
-    "screenWidth": 1200,
+    "screenWidth": 1280,
     "screenHeight": 800,
-    "sidebarWidth": 180,
+    "sidebarWidth": 260,
     "headerHeight": 48,
     "footerHeight": 32,
     "padding": 16,
-    "slotSize": 72,
-    "slotSpacing": 4
+    "slotSize": 200,
+    "slotSpacing": 8
   },
   "theme": {
-    "accent": "DEFAULT",
-    "customAccent": "#4ADE80",
+    "accent": "DEFAULT (PURPLE)",
+    "customAccent": "#8B5CF6",
     "bgOpacity": 90,
-    "panelRounding": 4,
+    "panelRounding": 12,
     "animationSpeed": 100,
     "highContrast": false,
     "blurEffects": true,
     "scanlineOverlay": false
   },
   "categories": [
-    { "id": "COMBAT", "label": "CATEGORY 01", "icon": "SHIELD" },
-    { "id": "MOVEMENT", "label": "CATEGORY 02", "icon": "EYE" },
-    { "id": "PLAYER", "label": "CATEGORY 03", "icon": "CROSSHAIR" },
-    { "id": "RENDER", "label": "CATEGORY 04", "icon": "ZAP" },
-    { "id": "WORLD", "label": "CATEGORY 05", "icon": "RADAR" },
-    { "id": "EXPLOIT", "label": "CATEGORY 06", "icon": "LAYERS" }
+    { "id": "COMBAT", "label": "COMBAT", "icon": "CROSSHAIR" },
+    { "id": "MOVEMENT", "label": "MOVEMENT", "icon": "ZAP" },
+    { "id": "PLAYER", "label": "PLAYER", "icon": "EYE" },
+    { "id": "RENDER", "label": "RENDER", "icon": "LAYERS" },
+    { "id": "WORLD", "label": "WORLD", "icon": "MAP" },
+    { "id": "EXPLOIT", "label": "EXPLOIT", "icon": "SHIELD" },
+    { "id": "MISC", "label": "MISC", "icon": "SLIDERS" }
   ],
   "components": {
-    "button": { "radius": 2, "height": 30 },
-    "toggle": { "width": 32, "height": 16 },
-    "slider": { "trackHeight": 6, "thumbSize": 12 },
+    "button": { "radius": 8, "height": 32 },
+    "toggle": { "width": 40, "height": 24 },
+    "slider": { "trackHeight": 6, "thumbSize": 16 },
     "dropdown": { "height": 28 },
-    "checkbox": { "size": 14 },
-    "keybind": { "minWidth": 60, "height": 24 }
+    "checkbox": { "size": 16 },
+    "keybind": { "minWidth": 80, "height": 28 }
   },
   "typography": {
     "font": "JetBrains Mono",
-    "sizes": { "hero": 14, "display": 10, "heading": 8, "subheading": 6, "default": 6, "body": 5, "label": 5, "micro": 4 }
+    "sizes": { "hero": 28, "display": 20, "heading": 16, "subheading": 13, "default": 12, "body": 11, "label": 10, "micro": 9 }
   }
 }
