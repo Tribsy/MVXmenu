@@ -2,6 +2,9 @@ package dev.mvxmenu.ui.widget;
 
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
 import dev.mvxmenu.theme.MvxmenuTheme;
+import dev.mvxmenu.theme.RoundedRectRenderer;
+import dev.mvxmenu.theme.FontRenderer;
+import dev.mvxmenu.util.MathUtil;
 import net.minecraft.client.gui.DrawContext;
 
 public class CheckboxWidget implements MvxmenuWidget, NarratableWidget {
@@ -14,10 +17,16 @@ public class CheckboxWidget implements MvxmenuWidget, NarratableWidget {
     private boolean hovered;
     private boolean focused;
 
+    // Animation
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
+    private float checkProgress = 0f;
+
     public CheckboxWidget(String id, String label, boolean initial) {
         this.id = id;
         this.label = label;
         this.checked = initial;
+        this.checkProgress = initial ? 1f : 0f;
     }
 
     @Override
@@ -41,8 +50,7 @@ public class CheckboxWidget implements MvxmenuWidget, NarratableWidget {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
-    }
+    public void setEnabled(boolean enabled) {}
 
     @Override
     public boolean isVisible() {
@@ -68,6 +76,10 @@ public class CheckboxWidget implements MvxmenuWidget, NarratableWidget {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if ((keyCode == 257 || keyCode == 32) && focused) { // Enter or Space
+            checked = !checked;
+            return true;
+        }
         return false;
     }
 
@@ -75,14 +87,64 @@ public class CheckboxWidget implements MvxmenuWidget, NarratableWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int boxColor = checked ? MvxmenuTheme.AC : (hovered || focused ? MvxmenuTheme.BD_1 : MvxmenuTheme.BD_2);
-        context.fill(bounds.x, bounds.y, bounds.x + 12, bounds.y + 12, boxColor);
-        if (checked) {
-            context.fill(bounds.x + 3, bounds.y + 5, bounds.x + 6, bounds.y + 8, MvxmenuTheme.TX_0);
-            context.fill(bounds.x + 6, bounds.y + 3, bounds.x + 9, bounds.y + 6, MvxmenuTheme.TX_0);
+
+        hoverProgress = MathUtil.lerp(hoverProgress, hovered ? 1f : 0f, delta * 10f);
+        focusProgress = MathUtil.lerp(focusProgress, focused ? 1f : 0f, delta * 10f);
+        checkProgress = MathUtil.lerp(checkProgress, checked ? 1f : 0f, delta * 15f);
+
+        int boxSize = Math.min(bounds.width, bounds.height);
+        int boxX = bounds.x;
+        int boxY = bounds.y + (bounds.height - boxSize) / 2;
+
+        // Box background
+        int boxColor = MathUtil.lerpColor(MvxmenuTheme.BD_2, MvxmenuTheme.AC, checkProgress);
+        if (!checked) {
+            boxColor = MathUtil.lerpColor(MvxmenuTheme.BD_2, MvxmenuTheme.BD_1, hoverProgress);
         }
+
+        RoundedRectRenderer.render(context, boxX, boxY, boxSize, boxSize, MvxmenuTheme.R_INPUT, boxColor);
+
+        // Border
+        int borderColor = checked ? MvxmenuTheme.AC : MathUtil.lerpColor(MvxmenuTheme.BD_1, MvxmenuTheme.AC, hoverProgress);
+        RoundedRectRenderer.renderBorder(context, boxX, boxY, boxSize, boxSize,
+                MvxmenuTheme.R_INPUT, 1, borderColor, boxColor);
+
+        // Checkmark (animated)
+        if (checkProgress > 0.01f) {
+            int checkColor = MvxmenuTheme.TX_0;
+            int cx = boxX + boxSize / 2;
+            int cy = boxY + boxSize / 2;
+            int checkSize = (int) (boxSize * 0.5f * checkProgress);
+
+            // Draw checkmark as two lines
+            int x1 = cx - checkSize / 2;
+            int y1 = cy;
+            int x2 = cx - checkSize / 6;
+            int y2 = cy + checkSize / 3;
+            int x3 = cx + checkSize / 2;
+            int y3 = cy - checkSize / 3;
+
+            // Line 1
+            context.fill(x1, y1, x2, y1 + 2, checkColor);
+            context.fill(x2 - 1, y1 - 1, x2 + 1, y2 + 1, checkColor);
+            // Line 2
+            context.fill(x2 - 1, y2 - 1, x3 + 1, y2 + 1, checkColor);
+            context.fill(x3 - 1, y3 - 1, x3 + 1, y3 + 1, checkColor);
+        }
+
+        // Label
+        if (label != null && !label.isEmpty()) {
+            FontRenderer.drawTextSimple(context, label, boxX + boxSize + 8, bounds.y + (bounds.height - 10) / 2, MvxmenuTheme.TX_0, true, "ui");
+        }
+
+        // Focus ring
         if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, 14, 14, MvxmenuTheme.AC);
+            int ringAlpha = (int) (255 * focusProgress);
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    boxX - 2, boxY - 2,
+                    boxSize + 4, boxSize + 4,
+                    MvxmenuTheme.R_INPUT + 2, 2, ringColor, boxColor);
         }
     }
 
@@ -114,6 +176,26 @@ public class CheckboxWidget implements MvxmenuWidget, NarratableWidget {
     @Override
     public void setFocused(boolean focused) {
         this.focused = focused;
+    }
+
+    @Override
+    public float getHoverProgress() {
+        return hoverProgress;
+    }
+
+    @Override
+    public void setHoverProgress(float progress) {
+        this.hoverProgress = progress;
+    }
+
+    @Override
+    public float getFocusProgress() {
+        return focusProgress;
+    }
+
+    @Override
+    public void setFocusProgress(float progress) {
+        this.focusProgress = progress;
     }
 
     public boolean isChecked() {

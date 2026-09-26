@@ -3,28 +3,48 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Collections;
 
 public class FreecamModule extends Module {
 
     private final IntegerSetting speed;
     private final BooleanSetting noclip;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     private ClientPlayerEntity originalPlayer;
     private Vec3d cameraPos;
     private float prevYaw, prevPitch;
 
     public FreecamModule() {
-        super("freecam", "Freecam", "Detach camera from player", Module.Category.EXPLOIT);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("freecam"))
+                .displayName("Freecam")
+                .description("Detach camera from player")
+                .category(Module.Category.EXPLOIT)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.speed = registerSetting(new IntegerSetting("speed", "Speed", "Camera movement speed (%)", 200, 50, 500));
         this.noclip = registerSetting(new BooleanSetting("noclip", "NoClip", "Pass through blocks", false));
     }
 
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
+
     @Override
     public void onEnable() {
-        if (mc.player == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return;
 
         cameraPos = mc.player.getPos();
         prevYaw = mc.player.getYaw();
@@ -35,7 +55,8 @@ public class FreecamModule extends Module {
 
     @Override
     public void onDisable() {
-        if (mc.player == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return;
 
         mc.player.setPos(cameraPos.x, cameraPos.y, cameraPos.z);
         mc.player.setYaw(prevYaw);
@@ -45,7 +66,8 @@ public class FreecamModule extends Module {
 
     @Override
     public void onTick() {
-        if (mc.player == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return;
 
         double moveSpeed = speed.getValue() / 100.0 * 0.1;
         Vec3d motion = Vec3d.ZERO;

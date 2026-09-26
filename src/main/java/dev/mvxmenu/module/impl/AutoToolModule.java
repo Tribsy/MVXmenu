@@ -3,6 +3,8 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -10,29 +12,49 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.slot.SlotActionType;
 
+import java.util.List;
+import java.util.Set;
+import java.util.Collections;
+
 public class AutoToolModule extends Module {
 
     private final BooleanSetting switchBack;
     private final IntegerSetting delay;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     private int switchCooldown = 0;
     private int prevSlot = -1;
 
     public AutoToolModule() {
-        super("auto_tool", "Auto Tool", "Automatically switch to best tool", Module.Category.PLAYER);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("auto_tool"))
+                .displayName("Auto Tool")
+                .description("Automatically switch to best tool")
+                .category(Module.Category.PLAYER)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.switchBack = registerSetting(new BooleanSetting("switch_back", "Switch Back", "Return to previous slot", true));
         this.delay = registerSetting(new IntegerSetting("delay", "Switch Delay", "Delay in ticks", 1, 0, 10));
     }
 
-    @Override
-    public void onEnable() {}
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
 
     @Override
-    public void onDisable() {}
+    public void onEnable() {
+    }
+
+    @Override
+    public void onDisable() {
+    }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.interactionManager == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null || mc.interactionManager == null) return;
 
         if (switchCooldown > 0) {
             switchCooldown--;
@@ -60,6 +82,9 @@ public class AutoToolModule extends Module {
     }
 
     private int findBestTool(net.minecraft.block.BlockState targetBlock) {
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return -1;
+
         int bestSlot = -1;
         float bestSpeed = 1.0f;
 

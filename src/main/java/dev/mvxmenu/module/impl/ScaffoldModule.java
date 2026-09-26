@@ -3,6 +3,8 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -14,30 +16,50 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 
+import java.util.List;
+import java.util.Set;
+import java.util.Collections;
+
 public class ScaffoldModule extends Module {
 
     private final IntegerSetting expandLength;
     private final BooleanSetting rotate;
     private final BooleanSetting tower;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     private int placeCooldown = 0;
 
     public ScaffoldModule() {
-        super("scaffold", "Scaffold", "Automatically place blocks under you", Module.Category.MOVEMENT);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("scaffold"))
+                .displayName("Scaffold")
+                .description("Automatically place blocks under you")
+                .category(Module.Category.MOVEMENT)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.expandLength = registerSetting(new IntegerSetting("expand_length", "Expand Length", "Blocks to place ahead", 6, 1, 10));
         this.rotate = registerSetting(new BooleanSetting("rotate", "Rotate", "Rotate to place blocks", true));
         this.tower = registerSetting(new BooleanSetting("tower", "Tower", "Jump to place blocks upward", true));
     }
 
-    @Override
-    public void onEnable() {}
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
 
     @Override
-    public void onDisable() {}
+    public void onEnable() {
+    }
+
+    @Override
+    public void onDisable() {
+    }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null || mc.world == null || mc.interactionManager == null) return;
 
         if (placeCooldown > 0) {
             placeCooldown--;
@@ -82,6 +104,9 @@ public class ScaffoldModule extends Module {
     }
 
     private int findBlock() {
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return -1;
+
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
             if (!stack.isEmpty() && stack.getItem() instanceof net.minecraft.item.BlockItem) {

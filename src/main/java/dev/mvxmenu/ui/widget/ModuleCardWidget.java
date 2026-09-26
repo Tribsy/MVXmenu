@@ -2,9 +2,17 @@ package dev.mvxmenu.ui.widget;
 
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
+import dev.mvxmenu.theme.FontRenderer;
+import dev.mvxmenu.theme.MvxmenuIcons;
 import dev.mvxmenu.theme.MvxmenuTheme;
+import dev.mvxmenu.theme.RoundedRectRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
 
+/**
+ * Module Card Widget v2 - Rounded corners (rx=12), SVG icons, new typography.
+ * 200x80px, left status bar (4px), top accent bar (2px), JetBrains Mono + Inter fonts.
+ */
 public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
 
     private String id;
@@ -17,6 +25,11 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
     private boolean visible = true;
     private boolean focused;
     private Module module;
+    private boolean lastClickWasToggle;
+
+    // Animation progress
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
 
     public ModuleCardWidget(String id, String name, String desc, boolean enabled, boolean disabled) {
         this.id = id;
@@ -27,7 +40,7 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
     }
 
     public ModuleCardWidget(Module module) {
-        this(module.getId(), module.getName(), module.getDescription(), module.isEnabled(), false);
+        this(module.getId().toString(), module.getDisplayName(), module.getDescription(), module.isEnabled(), false);
         this.module = module;
     }
 
@@ -37,6 +50,16 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
 
     public void setModule(Module module) {
         this.module = module;
+        this.id = module.getId().toString();
+        this.name = module.getDisplayName();
+        this.description = module.getDescription();
+        this.enabled = module.isEnabled();
+    }
+
+    public boolean consumeToggleClick() {
+        boolean toggle = lastClickWasToggle;
+        lastClickWasToggle = false;
+        return toggle;
     }
 
     @Override
@@ -83,12 +106,27 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
     public boolean mouseClicked(double x, double y, int button) {
         if (bounds == null || !bounds.contains((int) x, (int) y)) return false;
         if (disabled) return false;
-        enabled = !enabled;
+        lastClickWasToggle = x >= bounds.x + bounds.width - 48;
+        if (lastClickWasToggle) {
+            enabled = !enabled;
+            if (module != null) {
+                module.setEnabled(enabled);
+            }
+        }
         return true;
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == 257 || keyCode == 32) { // Enter or Space
+            if (bounds != null && (hovered || focused)) {
+                enabled = !enabled;
+                if (module != null) {
+                    module.setEnabled(enabled);
+                }
+                return true;
+            }
+        }
         return false;
     }
 
@@ -96,32 +134,88 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int bgColor = disabled ? MvxmenuTheme.BG_1 : (hovered || focused) ? MvxmenuTheme.BG_2 : MvxmenuTheme.BG_0;
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
-        if (hovered || focused || enabled) {
-            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + bounds.width - 2, bounds.y + 4, enabled ? MvxmenuTheme.AC : MvxmenuTheme.AC_DIM);
-            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + 4, bounds.y + bounds.height - 2, enabled ? MvxmenuTheme.AC : MvxmenuTheme.AC_DIM);
-        }
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + 2, getBorderColor());
-        context.fill(bounds.x, bounds.y + bounds.height - 1, bounds.x + bounds.width, bounds.y + bounds.height, MvxmenuTheme.BD_1);
-        context.fill(bounds.x + 8, bounds.y + 10, bounds.x + 18, bounds.y + 18, getStatusDotColor());
-        context.fill(bounds.x + 8, bounds.y + 18, bounds.x + 8 + 34, bounds.y + 19, MvxmenuTheme.BD_2);
 
-        net.minecraft.client.font.TextRenderer textRenderer = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
-        if (textRenderer != null) {
-            context.drawText(textRenderer, name.toUpperCase(), bounds.x + 24, bounds.y + 8, MvxmenuTheme.TX_0, true);
-            context.drawText(textRenderer, description, bounds.x + 8, bounds.y + 24, MvxmenuTheme.TX_1, true);
-            context.drawText(textRenderer, enabled ? "ON" : "OFF", bounds.x + bounds.width - 22, bounds.y + 8, enabled ? MvxmenuTheme.SUCCESS : MvxmenuTheme.TX_2, true);
+        // Animate hover/focus progress
+        hoverProgress = lerp(hoverProgress, (hovered || focused) ? 1f : 0f, delta * 8f);
+        focusProgress = lerp(focusProgress, focused ? 1f : 0f, delta * 8f);
+
+        // Determine colors
+        int bgColor;
+        int borderColor;
+        int statusColor;
+
+        if (disabled) {
+            bgColor = MvxmenuTheme.BG_1;
+            borderColor = MvxmenuTheme.BD_1;
+            statusColor = MvxmenuTheme.TX_2;
+        } else if (enabled) {
+            bgColor = lerpColor(MvxmenuTheme.BG_0, MvxmenuTheme.BG_2, hoverProgress * 0.3f);
+            borderColor = MvxmenuTheme.AC;
+            statusColor = MvxmenuTheme.SUCCESS;
+        } else {
+            bgColor = lerpColor(MvxmenuTheme.BG_0, MvxmenuTheme.BG_2, hoverProgress);
+            borderColor = lerpColor(MvxmenuTheme.BD_1, MvxmenuTheme.AC, hoverProgress);
+            statusColor = MvxmenuTheme.TX_2;
         }
 
+        // Rounded background (rx=12)
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_CARD, bgColor);
+
+        // Top accent bar (2px)
+        if (enabled || hovered || focused) {
+            int accentAlpha = (int) (255 * (enabled ? 1f : hoverProgress));
+            int topAccentColor = (borderColor & 0x00FFFFFF) | (accentAlpha << 24);
+            context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + 2, topAccentColor);
+        }
+
+        // Left status bar (4px wide, full height, rounded on left)
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, 4, bounds.height,
+                MvxmenuTheme.R_CARD, statusColor);
+
+        // Category icon (24px, SVG)
+        if (module != null) {
+            MvxmenuIcons icon = MvxmenuIcons.fromCategoryName(module.getCategory().getDisplayName());
+            int iconX = bounds.x + 12;
+            int iconY = bounds.y + (bounds.height - 24) / 2;
+            int iconColor = enabled ? MvxmenuTheme.AC : (hovered ? MvxmenuTheme.TX_1 : MvxmenuTheme.TX_2);
+            icon.render(context, iconX, iconY, 24, iconColor);
+        }
+
+        // Text with new typography
+        // Name: JetBrains Mono, TYPE_DEFAULT (12px), uppercase
+        // Description: Inter, TYPE_BODY (11px)
+        int textX = bounds.x + 44;
+        int nameY = bounds.y + 10;
+        int descY = bounds.y + 26;
+
+        FontRenderer.drawTextSimple(context, name.toUpperCase(), textX, nameY, MvxmenuTheme.TX_0, true, "ui");
+        FontRenderer.drawTextSimple(context, description, textX, descY, MvxmenuTheme.TX_1, true, "body");
+
+        // State text (ON/OFF) - right aligned
+        String stateText = enabled ? "ON" : "OFF";
+        int stateColor = enabled ? MvxmenuTheme.SUCCESS : MvxmenuTheme.TX_2;
+        net.minecraft.client.font.TextRenderer tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+        if (tr != null) {
+            int stateX = bounds.x + bounds.width - tr.getWidth(stateText) - 12;
+            FontRenderer.drawTextSimple(context, stateText, stateX, nameY, stateColor, true, "ui");
+        }
+
+        // Focus ring
         if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2, MvxmenuTheme.AC);
+            float ringProgress = focusProgress;
+            int ringAlpha = (int) (255 * ringProgress);
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    bounds.x - 2, bounds.y - 2,
+                    bounds.width + 4, bounds.height + 4,
+                    MvxmenuTheme.R_CARD + 2, 2, ringColor, bgColor);
         }
     }
 
     @Override
     public String getTooltipText(int mouseX, int mouseY) {
-        return name + (enabled ? " (enabled)" : " (disabled)");
+        return name + (enabled ? " (enabled)" : " (disabled)") + " - " + description;
     }
 
     @Override
@@ -161,15 +255,16 @@ public class ModuleCardWidget implements MvxmenuWidget, NarratableWidget {
         return disabled;
     }
 
-    public int getBorderColor() {
-        if (disabled) return MvxmenuTheme.BD_1;
-        if (enabled) return MvxmenuTheme.AC;
-        if (hovered || focused) return MvxmenuTheme.BD_2;
-        return MvxmenuTheme.BD_1;
+    private float lerp(float a, float b, float t) {
+        return a + (b - a) * Math.min(1f, t);
     }
 
-    public int getStatusDotColor() {
-        if (enabled) return MvxmenuTheme.SUCCESS;
-        return MvxmenuTheme.TX_2;
+    private int lerpColor(int from, int to, float t) {
+        t = Math.min(1f, Math.max(0f, t));
+        int r = (int) ((((from >> 16) & 0xFF) * (1 - t)) + (((to >> 16) & 0xFF) * t));
+        int g = (int) ((((from >> 8) & 0xFF) * (1 - t)) + (((to >> 8) & 0xFF) * t));
+        int b = (int) (((from & 0xFF) * (1 - t)) + ((to & 0xFF) * t));
+        int a = (int) ((((from >> 24) & 0xFF) * (1 - t)) + (((to >> 24) & 0xFF) * t));
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 }

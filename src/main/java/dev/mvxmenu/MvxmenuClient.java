@@ -2,21 +2,13 @@ package dev.mvxmenu;
 
 import dev.mvxmenu.config.MvxmenuConfig;
 import dev.mvxmenu.config.MvxmenuConfigSerializer;
-import dev.mvxmenu.module.BooleanSetting;
-import dev.mvxmenu.module.ColorSetting;
-import dev.mvxmenu.module.DoubleSetting;
-import dev.mvxmenu.module.EnumSetting;
-import dev.mvxmenu.module.IntegerSetting;
-import dev.mvxmenu.module.KeybindSetting;
-import dev.mvxmenu.module.Setting;
-import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.ModuleLoader;
 import dev.mvxmenu.module.ModuleRegistry;
-import dev.mvxmenu.module.StringSetting;
+import dev.mvxmenu.module.Module;
 import dev.mvxmenu.networking.MvxmenuNetworking;
 import dev.mvxmenu.performance.PerformanceManager;
+import dev.mvxmenu.theme.FontRenderer;
 import dev.mvxmenu.ui.screen.MvxmenuScreen;
-import dev.mvxmenu.ui.widget.MvxmenuWidget;
 import dev.mvxmenu.ui.widget.ModuleCardWidget;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -24,17 +16,14 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MvxmenuClient implements ClientModInitializer {
 
@@ -46,7 +35,6 @@ public class MvxmenuClient implements ClientModInitializer {
     private KeyBinding openKeybind;
     private MvxmenuConfig config;
     private MvxmenuConfigSerializer configSerializer;
-    private final Map<String, Boolean> moduleStates = new HashMap<>();
 
     @Override
     public void onInitializeClient() {
@@ -63,20 +51,22 @@ public class MvxmenuClient implements ClientModInitializer {
             LOGGER.info("[{}] Integration mod detected: examplemod", MOD_ID);
         }
 
-        ModuleLoader.loadAll();
-        LOGGER.info("[{}] Loaded {} modules", MOD_ID, ModuleRegistry.get().getAll().size());
-
         MvxmenuNetworking.initialize();
         MvxmenuNetworking.registerClientReceivers();
 
         PerformanceManager.init();
+
+        // Load modules via Fabric entrance points
+        ModuleLoader.loadModules();
+
+        // Initialize custom fonts from resource pack
+        FontRenderer.initialize();
 
         initializeScreen(config);
         registerKeybinds();
         registerTickHandler();
         registerConnectionEvents();
 
-        loadModuleStates(config);
         LOGGER.info("[{}] Client initialized successfully", MOD_ID);
     }
 
@@ -84,25 +74,16 @@ public class MvxmenuClient implements ClientModInitializer {
         screen = new MvxmenuScreen();
         screen.setConfig(config);
 
+        // Add registered modules to the screen
         ModuleRegistry registry = ModuleRegistry.get();
-        for (Module.Category category : Module.Category.values()) {
-            String categoryName = category.getDisplayName().toUpperCase();
-            for (Module module : registry.getByCategory(category)) {
-                Boolean savedState = moduleStates.get(module.getId());
-                if (savedState != null) {
-                    module.setEnabled(savedState);
-                }
-                ModuleCardWidget card = module.createCardWidget();
-                if (savedState != null) {
-                    card.setEnabled(savedState);
-                }
-                screen.addModule(categoryName, card);
-            }
+        for (Module module : registry.getAll()) {
+            String category = module.getCategory().getDisplayName().toUpperCase();
+            ModuleCardWidget card = new ModuleCardWidget(module);
+            screen.addModule(category, card);
         }
 
         screen.init();
-        LOGGER.info("[{}] Screen initialized with {} widgets across {} categories",
-                MOD_ID, screen.getWidgets().size(), Module.Category.values().length);
+        LOGGER.info("[{}] Screen initialized with {} modules", MOD_ID, registry.getAll().size());
     }
 
     private void registerKeybinds() {
@@ -119,6 +100,7 @@ public class MvxmenuClient implements ClientModInitializer {
             if (openKeybind.wasPressed()) {
                 toggleScreen();
             }
+            // Tick all modules
             ModuleRegistry.get().onTick();
         });
     }
@@ -131,126 +113,16 @@ public class MvxmenuClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             LOGGER.info("[{}] Disconnected from server", MOD_ID);
-            saveModuleStates();
         });
     }
 
     private void toggleScreen() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.currentScreen == null) {
-            client.setScreen(new MvxmenuScreenWrapper(screen));
-        } else if (client.currentScreen instanceof MvxmenuScreenWrapper) {
+            client.setScreen(new MvxmenuScreenAdapter(screen));
+        } else if (client.currentScreen instanceof MvxmenuScreenAdapter) {
             client.setScreen(null);
         }
-    }
-
-    private void loadModuleStates(MvxmenuConfig config) {
-        NbtCompound nbt = config.getModuleStates();
-        if (nbt != null) {
-            for (String key : nbt.getKeys()) {
-                moduleStates.put(key, nbt.getBoolean(key));
-            }
-        }
-        loadModuleKeybinds(config);
-        loadModuleSettings(config);
-    }
-
-    private void loadModuleKeybinds(MvxmenuConfig config) {
-        NbtCompound nbt = config.getModuleKeybinds();
-        if (nbt == null) return;
-        for (Module module : ModuleRegistry.get().getAll()) {
-            for (Setting<?> setting : module.getSettings()) {
-                if (setting instanceof KeybindSetting ks) {
-                    String key = module.getId() + ":" + setting.getId();
-                    if (nbt.contains(key)) {
-                        ks.setKey(nbt.getInt(key));
-                    }
-                }
-            }
-        }
-    }
-
-    private void saveModuleStates() {
-        if (screen == null) return;
-        NbtCompound nbt = new NbtCompound();
-        for (MvxmenuWidget widget : screen.getWidgets()) {
-            if (widget instanceof ModuleCardWidget m) {
-                nbt.putBoolean(m.getId(), m.isEnabled());
-            }
-        }
-        NbtCompound keybinds = saveModuleKeybinds();
-        NbtCompound settings = saveModuleSettings();
-        if (config != null) {
-            config.setModuleStates(nbt);
-            config.setModuleKeybinds(keybinds);
-            config.setModuleSettings(settings);
-            configSerializer.save(config);
-        }
-    }
-
-    private NbtCompound saveModuleKeybinds() {
-        NbtCompound nbt = new NbtCompound();
-        for (Module module : ModuleRegistry.get().getAll()) {
-            for (Setting<?> setting : module.getSettings()) {
-                if (setting instanceof KeybindSetting ks) {
-                    String key = module.getId() + ":" + setting.getId();
-                    nbt.putInt(key, ks.getValue());
-                }
-            }
-        }
-        return nbt;
-    }
-
-    @SuppressWarnings("unchecked")
-    private void loadModuleSettings(MvxmenuConfig config) {
-        NbtCompound nbt = config.getModuleSettings();
-        if (nbt == null) return;
-        for (Module module : ModuleRegistry.get().getAll()) {
-            for (Setting<?> setting : module.getSettings()) {
-                String key = module.getId() + ":" + setting.getId();
-                if (!nbt.contains(key)) continue;
-                if (setting instanceof BooleanSetting bs && nbt.contains(key, net.minecraft.nbt.NbtElement.NUMBER_TYPE)) {
-                    bs.setValue(nbt.getBoolean(key));
-                } else if (setting instanceof IntegerSetting is && nbt.contains(key, net.minecraft.nbt.NbtElement.NUMBER_TYPE)) {
-                    is.setValue(nbt.getInt(key));
-                } else if (setting instanceof DoubleSetting ds && nbt.contains(key, net.minecraft.nbt.NbtElement.NUMBER_TYPE)) {
-                    ds.setValue(nbt.getDouble(key));
-                } else if (setting instanceof StringSetting ss && nbt.contains(key, net.minecraft.nbt.NbtElement.STRING_TYPE)) {
-                    ss.setValue(nbt.getString(key));
-                } else if (setting instanceof ColorSetting cs && nbt.contains(key, net.minecraft.nbt.NbtElement.NUMBER_TYPE)) {
-                    cs.setValue(nbt.getInt(key));
-                } else if (setting instanceof EnumSetting es && nbt.contains(key, NbtElement.STRING_TYPE)) {
-                    try {
-                        Class<Enum> enumClass = (Class<Enum>) es.getEnumClass();
-                        Enum value = Enum.valueOf(enumClass, nbt.getString(key));
-                        es.setValue(value);
-                    } catch (IllegalArgumentException ignored) {}
-                }
-            }
-        }
-    }
-
-    private NbtCompound saveModuleSettings() {
-        NbtCompound nbt = new NbtCompound();
-        for (Module module : ModuleRegistry.get().getAll()) {
-            for (Setting<?> setting : module.getSettings()) {
-                String key = module.getId() + ":" + setting.getId();
-                if (setting instanceof BooleanSetting bs) {
-                    nbt.putBoolean(key, bs.getValue());
-                } else if (setting instanceof IntegerSetting is) {
-                    nbt.putInt(key, is.getValue());
-                } else if (setting instanceof DoubleSetting ds) {
-                    nbt.putDouble(key, ds.getValue());
-                } else if (setting instanceof StringSetting ss) {
-                    nbt.putString(key, ss.getValue());
-                } else if (setting instanceof ColorSetting cs) {
-                    nbt.putInt(key, cs.getValue());
-                } else if (setting instanceof EnumSetting<?> es) {
-                    nbt.putString(key, es.getValue().name());
-                }
-            }
-        }
-        return nbt;
     }
 
     public static MvxmenuClient getInstance() {
@@ -265,7 +137,58 @@ public class MvxmenuClient implements ClientModInitializer {
         return config;
     }
 
-    public void updateModuleState(String moduleId, boolean enabled) {
-        moduleStates.put(moduleId, enabled);
+    /**
+     * Adapter to make MvxmenuScreen compatible with Minecraft's Screen interface.
+     */
+    public static class MvxmenuScreenAdapter extends Screen {
+        private final MvxmenuScreen mvxmenuScreen;
+
+        public MvxmenuScreenAdapter(MvxmenuScreen mvxmenuScreen) {
+            super(Text.literal("MVXmenu"));
+            this.mvxmenuScreen = mvxmenuScreen;
+        }
+
+        @Override
+        public void init() {
+            super.init();
+            mvxmenuScreen.init();
+        }
+
+        @Override
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+            mvxmenuScreen.render(context, mouseX, mouseY, delta);
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            return mvxmenuScreen.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (mvxmenuScreen.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                close();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean charTyped(char chr, int modifiers) {
+            return mvxmenuScreen.charTyped(chr, modifiers);
+        }
+
+        @Override
+        public void close() {
+            super.close();
+        }
+
+        @Override
+        public boolean shouldPause() {
+            return false;
+        }
     }
 }

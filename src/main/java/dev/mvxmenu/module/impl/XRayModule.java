@@ -3,6 +3,8 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -13,14 +15,15 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.Collections;
 
 public class XRayModule extends Module {
 
     private final BooleanSetting oresSetting;
     private final BooleanSetting chestsSetting;
     private final IntegerSetting rangeSetting;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     private static final Set<Block> XRAY_BLOCKS = new HashSet<>();
 
     static {
@@ -51,23 +54,41 @@ public class XRayModule extends Module {
     }
 
     public XRayModule() {
-        super("xray", "X-Ray", "See ores through blocks", Module.Category.RENDER);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("xray"))
+                .displayName("X-Ray")
+                .description("See ores through blocks")
+                .category(Module.Category.RENDER)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.oresSetting = registerSetting(new BooleanSetting("ores", "Ores", "Highlight ores", true));
         this.chestsSetting = registerSetting(new BooleanSetting("chests", "Chests", "Highlight chests", true));
         this.rangeSetting = registerSetting(new IntegerSetting("range", "Range", "X-ray range in blocks", 50, 10, 100));
     }
 
-    @Override
-    public void onEnable() {}
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
 
     @Override
-    public void onDisable() {}
+    public void onEnable() {
+    }
 
     @Override
-    public void onTick() {}
+    public void onDisable() {
+    }
+
+    @Override
+    public void onTick() {
+    }
 
     public void renderXRay(ClientWorld world, net.minecraft.client.render.VertexConsumerProvider providers, double cameraX, double cameraY, double cameraZ) {
-        if (mc.player == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return;
 
         int range = rangeSetting.getValue();
         BlockPos playerPos = mc.player.getBlockPos();

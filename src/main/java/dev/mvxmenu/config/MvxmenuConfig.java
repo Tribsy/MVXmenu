@@ -12,11 +12,11 @@ public class MvxmenuConfig {
 
     @Expose
     @SerializedName("gui_scale")
-    private int guiScale = 0;
+    private int guiScale = 3;
 
     @Expose
     @SerializedName("theme_accent")
-    private String themeAccent = "DEFAULT (GREEN)";
+    private String themeAccent = "DEFAULT (PURPLE)";
 
     @Expose
     @SerializedName("blur_effects")
@@ -48,7 +48,7 @@ public class MvxmenuConfig {
 
     @Expose
     @SerializedName("custom_accent")
-    private int customAccent = 0xFF4ADE80;
+    private int customAccent = 0xFF8B5CF6;
 
     @Expose
     @SerializedName("use_custom_accent")
@@ -60,15 +60,7 @@ public class MvxmenuConfig {
 
     @Expose
     @SerializedName("panel_rounding")
-    private int panelRounding = 4;
-
-    private NbtCompound moduleStates = new NbtCompound();
-
-    @Expose
-    @SerializedName("module_keybinds")
-    private NbtCompound moduleKeybinds = new NbtCompound();
-
-    private NbtCompound moduleSettings = new NbtCompound();
+    private int panelRounding = 12;
 
     public MvxmenuConfig() {
     }
@@ -183,29 +175,5 @@ public class MvxmenuConfig {
 
     public void setPanelRounding(int panelRounding) {
         this.panelRounding = Math.max(0, Math.min(8, panelRounding));
-    }
-
-    public NbtCompound getModuleStates() {
-        return moduleStates;
-    }
-
-    public void setModuleStates(NbtCompound moduleStates) {
-        this.moduleStates = moduleStates != null ? moduleStates : new NbtCompound();
-    }
-
-    public NbtCompound getModuleKeybinds() {
-        return moduleKeybinds;
-    }
-
-    public void setModuleKeybinds(NbtCompound moduleKeybinds) {
-        this.moduleKeybinds = moduleKeybinds != null ? moduleKeybinds : new NbtCompound();
-    }
-
-    public NbtCompound getModuleSettings() {
-        return moduleSettings;
-    }
-
-    public void setModuleSettings(NbtCompound moduleSettings) {
-        this.moduleSettings = moduleSettings != null ? moduleSettings : new NbtCompound();
     }
 }

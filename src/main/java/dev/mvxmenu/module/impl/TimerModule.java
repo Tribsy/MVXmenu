@@ -2,29 +2,50 @@ package dev.mvxmenu.module.impl;
 
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Collections;
 
 public class TimerModule extends Module {
 
     private final IntegerSetting timerSpeed;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     private float originalTimer = 1.0f;
 
     public TimerModule() {
-        super("timer", "Timer", "Speed up game timer", Module.Category.EXPLOIT);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("timer"))
+                .displayName("Timer")
+                .description("Speed up game timer")
+                .category(Module.Category.EXPLOIT)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.timerSpeed = registerSetting(new IntegerSetting("timer_speed", "Timer Speed", "Game speed multiplier (%)", 200, 10, 1000));
+    }
+
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
     }
 
     @Override
     public void onEnable() {
-        if (mc.world != null) {
-            originalTimer = mc.world.getTime() > 0 ? 1.0f : 1.0f;
+        MinecraftClient mc = getMc();
+        if (mc != null && mc.world != null) {
+            originalTimer = 1.0f;
         }
     }
 
     @Override
     public void onDisable() {
-        if (mc.world != null) {
+        MinecraftClient mc = getMc();
+        if (mc != null && mc.world != null) {
             // Timer is handled via tick manipulation, reset on disable
         }
     }

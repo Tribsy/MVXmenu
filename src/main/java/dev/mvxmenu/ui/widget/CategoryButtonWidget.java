@@ -3,6 +3,9 @@ package dev.mvxmenu.ui.widget;
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
 import dev.mvxmenu.theme.MvxmenuIcons;
 import dev.mvxmenu.theme.MvxmenuTheme;
+import dev.mvxmenu.theme.RoundedRectRenderer;
+import dev.mvxmenu.theme.FontRenderer;
+import dev.mvxmenu.util.MathUtil;
 import net.minecraft.client.gui.DrawContext;
 
 public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
@@ -15,6 +18,10 @@ public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
     private boolean hovered;
     private boolean visible = true;
     private boolean focused;
+
+    // Animation progress
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
 
     public CategoryButtonWidget(String id, String categoryName, MvxmenuIcons icon) {
         this.id = id;
@@ -43,8 +50,7 @@ public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
-    }
+    public void setEnabled(boolean enabled) {}
 
     @Override
     public boolean isVisible() {
@@ -77,28 +83,61 @@ public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int bgColor = active ? MvxmenuTheme.AC_DIM : (hovered || focused) ? MvxmenuTheme.BG_2 : MvxmenuTheme.BG_1;
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
-        if (hovered || active) {
-            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + bounds.width - 2, bounds.y + 4, active ? MvxmenuTheme.AC : MvxmenuTheme.AC_DIM);
-        }
-        context.fill(bounds.x, bounds.y + bounds.height - 2, bounds.x + bounds.width, bounds.y + bounds.height, active ? MvxmenuTheme.AC : MvxmenuTheme.BD_1);
+
+        // Animate
+        hoverProgress = MathUtil.lerp(hoverProgress, (hovered || active) ? 1f : 0f, delta * 10f);
+        focusProgress = MathUtil.lerp(focusProgress, focused ? 1f : 0f, delta * 10f);
+
+        int bgColor;
         if (active) {
-            context.fill(bounds.x + 2, bounds.y + 2, bounds.x + 4, bounds.y + bounds.height - 2, MvxmenuTheme.AC);
+            bgColor = MathUtil.lerpColor(MvxmenuTheme.BG_1, MvxmenuTheme.AC_DIM, hoverProgress);
+        } else if (hovered || focused) {
+            bgColor = MathUtil.lerpColor(MvxmenuTheme.BG_1, MvxmenuTheme.BG_2, hoverProgress);
+        } else {
+            bgColor = MvxmenuTheme.BG_1;
         }
+
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_BUTTON, bgColor);
+
+        if (active) {
+            context.fill(bounds.x + 2, bounds.y + 4, bounds.x + 4, bounds.y + bounds.height - 4, MvxmenuTheme.AC);
+        }
+
+        // Icon (SVG)
         int iconX = bounds.x + 8;
         int iconY = bounds.y + (bounds.height - 24) / 2;
-        icon.render(context, iconX, iconY, 24, getIconColor());
-        context.fill(iconX + 28, bounds.y + 6, iconX + 30, bounds.y + bounds.height - 6, getTextColor());
+        int iconColor = getIconColor();
+        icon.render(context, iconX, iconY, 24, iconColor);
 
-        net.minecraft.client.font.TextRenderer textRenderer = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
-        if (textRenderer != null) {
-            context.drawText(textRenderer, categoryName, iconX + 38, bounds.y + (bounds.height - 8) / 2, getTextColor(), true);
-        }
+        // Separator line
+        int sepColor = getTextColor();
+        context.fill(iconX + 28, bounds.y + 6, iconX + 30, bounds.y + bounds.height - 6, sepColor);
 
+        // Category name
+        FontRenderer.drawTextSimple(context, categoryName, iconX + 38, bounds.y + (bounds.height - 8) / 2, getTextColor(), true, "ui");
+
+        // Focus ring
         if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2, MvxmenuTheme.AC);
+            int ringAlpha = (int) (255 * focusProgress);
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    bounds.x - 2, bounds.y - 2,
+                    bounds.width + 4, bounds.height + 4,
+                    MvxmenuTheme.R_BUTTON + 2, 2, ringColor, bgColor);
         }
+    }
+
+    private int getTextColor() {
+        if (active) return MvxmenuTheme.TX_0;
+        if (hovered || focused) return MvxmenuTheme.TX_1;
+        return MvxmenuTheme.TX_2;
+    }
+
+    private int getIconColor() {
+        if (active) return MvxmenuTheme.AC;
+        if (hovered) return MvxmenuTheme.TX_1;
+        return MvxmenuTheme.TX_2;
     }
 
     @Override
@@ -131,6 +170,26 @@ public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
         this.focused = focused;
     }
 
+    @Override
+    public float getHoverProgress() {
+        return hoverProgress;
+    }
+
+    @Override
+    public void setHoverProgress(float progress) {
+        this.hoverProgress = progress;
+    }
+
+    @Override
+    public float getFocusProgress() {
+        return focusProgress;
+    }
+
+    @Override
+    public void setFocusProgress(float progress) {
+        this.focusProgress = progress;
+    }
+
     public String getCategoryName() {
         return categoryName;
     }
@@ -145,17 +204,6 @@ public class CategoryButtonWidget implements MvxmenuWidget, NarratableWidget {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    public int getTextColor() {
-        if (active) return MvxmenuTheme.TX_0;
-        if (hovered || focused) return MvxmenuTheme.TX_1;
-        return MvxmenuTheme.TX_2;
-    }
-
-    public int getIconColor() {
-        if (active) return MvxmenuTheme.AC;
-        return MvxmenuTheme.TX_2;
     }
 
     public boolean isActiveState() {

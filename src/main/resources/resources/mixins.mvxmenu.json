@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "dev.mvxmenu.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "mvxmenu-refmap.json",
+  "mixins": [
+    "MinecraftClientMixin",
+    "EntityRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

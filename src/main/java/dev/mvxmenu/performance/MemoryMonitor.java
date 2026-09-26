@@ -3,9 +3,12 @@ package dev.mvxmenu.performance;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MemoryMonitor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMonitor.class);
     private static final MemoryMXBean MEMORY_BEAN = ManagementFactory.getMemoryMXBean();
     private static long lastGcTime = 0;
     private static int gcCount = 0;
@@ -28,7 +31,6 @@ public class MemoryMonitor {
         double usagePercent = (double) heap.getUsed() / heap.getMax();
 
         if (usagePercent > 0.85 && System.currentTimeMillis() - lastGcTime > 30000) {
-            System.gc();
             lastGcTime = System.currentTimeMillis();
             gcCount++;
         }
@@ -36,8 +38,9 @@ public class MemoryMonitor {
 
     public static void logStats() {
         MemoryStats stats = getStats();
-        System.out.printf("[MVXmenu Memory] Heap: %d/%d MB (%.1f%%), Non-heap: %d MB, GC: %d%n",
-                stats.usedHeap, stats.maxHeap, (double) stats.usedHeap / stats.maxHeap * 100,
+        LOGGER.info("[MVXmenu Memory] Heap: {}MB/{}MB ({}%), Non-heap: {}MB, GC: {}",
+                stats.usedHeap, stats.maxHeap,
+                stats.maxHeap > 0 ? (int)((double)stats.usedHeap / stats.maxHeap * 100) : 0,
                 stats.usedNonHeap, stats.gcCount);
     }
 

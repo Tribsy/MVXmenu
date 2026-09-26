@@ -2,6 +2,9 @@ package dev.mvxmenu.ui.widget;
 
 import dev.mvxmenu.ui.layout.MvxmenuLayout;
 import dev.mvxmenu.theme.MvxmenuTheme;
+import dev.mvxmenu.theme.RoundedRectRenderer;
+import dev.mvxmenu.theme.FontRenderer;
+import dev.mvxmenu.util.MathUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -17,10 +20,15 @@ public class DropdownWidget implements MvxmenuWidget {
     private int selectedIndex;
     private int scrollOffset;
     private static final int VISIBLE_OPTIONS = 6;
-    private static final int OPTION_HEIGHT = 20;
+    private static final int OPTION_HEIGHT = 24;
     private boolean visible = true;
     private boolean hovered;
     private boolean focused;
+
+    // Animation
+    private float hoverProgress = 0f;
+    private float focusProgress = 0f;
+    private float openProgress = 0f;
 
     public DropdownWidget(String id, String label, String[] options, String initial) {
         this.id = id;
@@ -56,8 +64,7 @@ public class DropdownWidget implements MvxmenuWidget {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
-    }
+    public void setEnabled(boolean enabled) {}
 
     @Override
     public boolean isVisible() {
@@ -75,7 +82,8 @@ public class DropdownWidget implements MvxmenuWidget {
         if (open) {
             int listY = bounds.y + bounds.height;
             int listHeight = Math.min(options.length, VISIBLE_OPTIONS) * OPTION_HEIGHT;
-            return mouseY >= listY && mouseY < listY + listHeight;
+            return mouseX >= bounds.x && mouseX < bounds.x + bounds.width
+                    && mouseY >= listY && mouseY < listY + listHeight;
         }
         return false;
     }
@@ -84,7 +92,7 @@ public class DropdownWidget implements MvxmenuWidget {
     public boolean mouseClicked(double x, double y, int button) {
         if (open) {
             int listY = bounds.y + bounds.height;
-            int optionIndex = (int)((y - listY) / OPTION_HEIGHT);
+            int optionIndex = (int) ((y - listY) / OPTION_HEIGHT);
             if (optionIndex >= 0 && optionIndex < options.length) {
                 selectedIndex = optionIndex;
                 value = options[optionIndex];
@@ -103,30 +111,30 @@ public class DropdownWidget implements MvxmenuWidget {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!open) {
-            if (keyCode == 257) {
+            if (keyCode == 257) { // Enter
                 open = true;
                 scrollOffset = 0;
                 return true;
             }
             return false;
         }
-        if (keyCode == 257) {
+        if (keyCode == 257) { // Enter - select
             open = false;
             return true;
         }
-        if (keyCode == 264) {
+        if (keyCode == 264) { // Down
             selectedIndex = Math.min(options.length - 1, selectedIndex + 1);
             value = options[selectedIndex];
             if (selectedIndex >= scrollOffset + VISIBLE_OPTIONS) scrollOffset++;
             return true;
         }
-        if (keyCode == 263) {
+        if (keyCode == 263) { // Up
             selectedIndex = Math.max(0, selectedIndex - 1);
             value = options[selectedIndex];
             if (selectedIndex < scrollOffset) scrollOffset--;
             return true;
         }
-        if (keyCode == 256) {
+        if (keyCode == 256) { // ESC
             open = false;
             return true;
         }
@@ -137,40 +145,81 @@ public class DropdownWidget implements MvxmenuWidget {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         hovered = isHovered(mouseX, mouseY);
         if (bounds == null) return;
-        int bgColor = open ? MvxmenuTheme.AC_DIM : (hovered || focused) ? MvxmenuTheme.BG_2 : MvxmenuTheme.BG_1;
-        context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, bgColor);
-        context.fill(bounds.x, bounds.y + bounds.height - 2, bounds.x + bounds.width, bounds.y + bounds.height, MvxmenuTheme.BD_1);
-        context.drawText(MinecraftClient.getInstance().textRenderer, value, bounds.x + 4, bounds.y + (bounds.height - 8) / 2, MvxmenuTheme.TX_0, false);
+
+        hoverProgress = MathUtil.lerp(hoverProgress, (hovered || open) ? 1f : 0f, delta * 10f);
+        focusProgress = MathUtil.lerp(focusProgress, focused ? 1f : 0f, delta * 10f);
+        openProgress = MathUtil.lerp(openProgress, open ? 1f : 0f, delta * 15f);
+
+        // Main button
+        int bgColor = MathUtil.lerpColor(MvxmenuTheme.BG_1, MvxmenuTheme.BG_2, hoverProgress);
+        if (open) bgColor = MvxmenuTheme.AC_DIM;
+
+        RoundedRectRenderer.render(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_INPUT, bgColor);
+
+        // Border
+        int borderColor = MathUtil.lerpColor(MvxmenuTheme.BD_1, MvxmenuTheme.AC, Math.max(hoverProgress, openProgress));
+        RoundedRectRenderer.renderBorder(context, bounds.x, bounds.y, bounds.width, bounds.height,
+                MvxmenuTheme.R_INPUT, 1, borderColor, bgColor);
+
+        // Value text
+        FontRenderer.drawTextSimple(context, value, bounds.x + 8, bounds.y + (bounds.height - 10) / 2, MvxmenuTheme.TX_0, true, "ui");
+
+        // Dropdown arrow
+        int arrowX = bounds.x + bounds.width - 16;
+        int arrowY = bounds.y + (bounds.height - 8) / 2;
+        int arrowColor = MvxmenuTheme.TX_1;
+        context.fill(arrowX, arrowY, arrowX + 8, arrowY + 1, arrowColor);
+        context.fill(arrowX + 1, arrowY + 1, arrowX + 7, arrowY + 2, arrowColor);
+        context.fill(arrowX + 2, arrowY + 2, arrowX + 6, arrowY + 3, arrowColor);
+        context.fill(arrowX + 3, arrowY + 3, arrowX + 5, arrowY + 4, arrowColor);
+
+        // Focus ring
         if (focused) {
-            FocusRing.render(context, bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2, MvxmenuTheme.AC);
+            int ringAlpha = (int) (255 * focusProgress);
+            int ringColor = (MvxmenuTheme.AC & 0x00FFFFFF) | (ringAlpha << 24);
+            RoundedRectRenderer.renderBorder(context,
+                    bounds.x - 2, bounds.y - 2,
+                    bounds.width + 4, bounds.height + 4,
+                    MvxmenuTheme.R_INPUT + 2, 2, ringColor, bgColor);
         }
 
-        if (open) {
+        // Options dropdown
+        if (open && openProgress > 0.01f) {
             int listX = bounds.x;
-            int listY = bounds.y + bounds.height;
+            int listY = bounds.y + bounds.height + 2;
             int listWidth = bounds.width;
             int visibleCount = Math.min(options.length, VISIBLE_OPTIONS);
             int listHeight = visibleCount * OPTION_HEIGHT;
 
-            context.fill(listX, listY, listX + listWidth, listY + listHeight, MvxmenuTheme.BG_1);
-            context.fill(listX, listY, listX + listWidth, listY + 1, MvxmenuTheme.BD_1);
-            context.fill(listX, listY + listHeight - 1, listX + listWidth, listY + listHeight, MvxmenuTheme.BD_1);
+            // Dropdown background
+            RoundedRectRenderer.render(context, listX, listY, listWidth, listHeight,
+                    MvxmenuTheme.R_INPUT, MvxmenuTheme.BG_1);
+
+            // Border
+            RoundedRectRenderer.renderBorder(context, listX, listY, listWidth, listHeight,
+                    MvxmenuTheme.R_INPUT, 1, MvxmenuTheme.BD_1, MvxmenuTheme.BG_1);
 
             for (int i = 0; i < visibleCount; i++) {
                 int optionIndex = i + scrollOffset;
                 if (optionIndex >= options.length) break;
                 int oy = listY + i * OPTION_HEIGHT;
 
-                if (optionIndex == selectedIndex) {
-                    context.fill(listX, oy, listX + listWidth, oy + OPTION_HEIGHT, MvxmenuTheme.AC_DIM);
+                boolean isSelected = optionIndex == selectedIndex;
+                boolean isHovered = mouseX >= listX && mouseX < listX + listWidth
+                        && mouseY >= oy && mouseY < oy + OPTION_HEIGHT;
+
+                if (isSelected || isHovered) {
+                    int optBgColor = isSelected ? MvxmenuTheme.AC_DIM : MvxmenuTheme.BG_2;
+                    context.fill(listX + 1, oy, listX + listWidth - 1, oy + OPTION_HEIGHT, optBgColor);
                 }
 
-                if (optionIndex == selectedIndex) {
-                    context.fill(listX, oy, listX + 2, oy + OPTION_HEIGHT, MvxmenuTheme.AC);
+                if (isSelected) {
+                    context.fill(listX + 1, oy, listX + 3, oy + OPTION_HEIGHT, MvxmenuTheme.AC);
                 }
 
-                context.drawText(MinecraftClient.getInstance().textRenderer, options[optionIndex], listX + 4, oy + (OPTION_HEIGHT - 8) / 2,
-                        optionIndex == selectedIndex ? MvxmenuTheme.TX_0 : MvxmenuTheme.TX_1, false);
+                int textColor = isSelected ? MvxmenuTheme.TX_0 : MvxmenuTheme.TX_1;
+                FontRenderer.drawTextSimple(context, options[optionIndex], listX + 8, oy + (OPTION_HEIGHT - 10) / 2, textColor, true, "ui");
             }
         }
     }
@@ -194,6 +243,26 @@ public class DropdownWidget implements MvxmenuWidget {
     public void setFocused(boolean focused) {
         this.focused = focused;
         if (!focused) open = false;
+    }
+
+    @Override
+    public float getHoverProgress() {
+        return hoverProgress;
+    }
+
+    @Override
+    public void setHoverProgress(float progress) {
+        this.hoverProgress = progress;
+    }
+
+    @Override
+    public float getFocusProgress() {
+        return focusProgress;
+    }
+
+    @Override
+    public void setFocusProgress(float progress) {
+        this.focusProgress = progress;
     }
 
     public String getValue() {

@@ -1,17 +1,8 @@
 package dev.mvxmenu.theme;
 
 /**
- * Design tokens extracted from the Figma Make export.
- *
- * <p>Each constant maps to a CSS custom property from
- * {@code Minecraft In-Game Menu UI/src/index.css}.
- *
- * <p>Background colors: BG_0 (#060606) through BG_5 (#303030)
- * Border colors: BD_0 (#181818) through BD_3 (#444444)
- * Text colors: TX_0 (#EFEFEF) through TX_3 (#333333)
- * Accent colors: AC, SUCCESS, WARNING, DANGER, INFO, PURPLE, ORANGE
- * Radius: R_1 (2px) through R_4 (6px)
- * Spacing: SP_1 (4px) through SP_12 (48px)
+ * Design tokens generated from docs/brand/colors/palette.md
+ * DO NOT EDIT MANUALLY — run scripts/generate_theme.py
  */
 public final class MvxmenuTheme {
 
@@ -36,28 +27,34 @@ public final class MvxmenuTheme {
     public static final int TX_3 = 0xFF333333;
 
     // Accent / Semantic
-    public static final int AC = 0xFF7CFFB1;
-    public static final int SUCCESS = 0xFF7CFFB1;
-    public static final int WARNING = 0xFFFFC857;
-    public static final int DANGER = 0xFFFF5F7A;
-    public static final int INFO = 0xFF7AC7FF;
-    public static final int PURPLE = 0xFFB38AFF;
-    public static final int ORANGE = 0xFFFFA25B;
+    public static final int AC = 0xFF8B5CF6;
+    public static final int SUCCESS = 0xFF4ADE80;
+    public static final int WARNING = 0xFFFCD34D;
+    public static final int DANGER = 0xFFF87171;
+    public static final int INFO = 0xFF60A5FA;
+    public static final int PURPLE = 0xFFA78BFA;
+    public static final int ORANGE = 0xFFFB923C;
 
-    // Overlays
-    public static final int AC_DIM = 0x124ADE80;
-    public static final int AC_BORDER = 0x384ADE80;
-    public static final int AC_FG = 0xFF052E16;
-    public static final int SUCCESS_BG = 0x124ADE80;
-    public static final int WARNING_BG = 0x12FCD34D;
-    public static final int DANGER_BG = 0x12F87171;
-    public static final int INFO_BG = 0x1260A5FA;
+    // Semantic Backgrounds (10% Opacity)
+    public static final int SUCCESS_BG = 0x1A4ADE80;
+    public static final int WARNING_BG = 0x1AFCD34D;
+    public static final int DANGER_BG = 0x1AF87171;
+    public static final int INFO_BG = 0x1A60A5FA;
+
+    // Overlay / Accent Variants
+    public static final int AC_DIM = 0x128B5CF6;
+    public static final int AC_BORDER = 0x388B5CF6;
+    public static final int AC_FG = 0xFF1A0D2E;
+    public static final int AC_GLOW = 0x2E8B5CF6;
+    public static final int PURPLE_BG = 0x1AA78BFA;
 
     // Radius (pixels)
-    public static final int R_1 = 2;
-    public static final int R_2 = 3;
-    public static final int R_3 = 4;
-    public static final int R_4 = 6;
+    public static final int R_WINDOW = 19;
+    public static final int R_PANEL = 12;
+    public static final int R_CARD = 12;
+    public static final int R_BUTTON = 8;
+    public static final int R_INPUT = 6;
+    public static final int R_BADGE = 999;
 
     // Spacing (pixels)
     public static final int SP_1 = 4;
@@ -67,41 +64,37 @@ public final class MvxmenuTheme {
     public static final int SP_6 = 24;
     public static final int SP_8 = 32;
     public static final int SP_12 = 48;
+    public static final int SP_16 = 64;
 
-    // Type sizes (Minecraft font pixels)
-    public static final int TYPE_HERO = 14;
-    public static final int TYPE_DISPLAY = 10;
-    public static final int TYPE_HEADING = 8;
-    public static final int TYPE_SUBHEADING = 6;
-    public static final int TYPE_DEFAULT = 6;
-    public static final int TYPE_BODY = 5;
-    public static final int TYPE_LABEL = 5;
-    public static final int TYPE_MICRO = 4;
+    // Typography
+    public static final int TYPE_HERO = 28;
+    public static final int TYPE_DISPLAY = 20;
+    public static final int TYPE_HEADING = 16;
+    public static final int TYPE_SUBHEADING = 13;
+    public static final int TYPE_DEFAULT = 12;
+    public static final int TYPE_BODY = 11;
+    public static final int TYPE_LABEL = 10;
+    public static final int TYPE_MICRO = 9;
 
-    // Shadows (render as offset alpha rects)
-    public static final int SHADOW_SM_OFFSET_Y = 1;
-    public static final int SHADOW_SM_BLUR = 3;
-    public static final int SHADOW_SM_ALPHA = 0x66000000;
-    public static final int SHADOW_MD_OFFSET_Y = 4;
-    public static final int SHADOW_MD_BLUR = 12;
-    public static final int SHADOW_MD_ALPHA = 0x80000000;
-    public static final int SHADOW_LG_OFFSET_Y = 8;
-    public static final int SHADOW_LG_BLUR = 24;
-    public static final int SHADOW_LG_ALPHA = 0xB3000000;
-    public static final int SHADOW_PANEL_OFFSET_Y = 0;
-    public static final int SHADOW_PANEL_BLUR = 0;
-    public static final int SHADOW_PANEL_ALPHA = 0x05FFFFFF;
+    // Font Resource IDs
+    public static final String FONT_UI = "mvxmenu:jetbrains_mono";
+    public static final String FONT_BODY = "mvxmenu:inter";
+    public static final String FONT_PIXEL = "mvxmenu:press_start_2p";
 
-    // Motion durations (ms)
-    public static final int MOTION_MICRO_DURATION = 80;
-    public static final int MOTION_SNAP_DURATION = 120;
-    public static final int MOTION_SLIDE_DURATION = 200;
-    public static final int MOTION_FADE_DURATION = 200;
+    // Motion Durations (ms)
+    public static final int MOTION_MICRO = 80;
+    public static final int MOTION_SNAP = 120;
+    public static final int MOTION_SLIDE = 200;
+    public static final int MOTION_FADE = 200;
+    public static final int MOTION_SPRING = 300;
 
-    // Accent glow (render effect — custom rendering via alpha glow rect)
-    public static final int AC_GLOW_COLOR = 0x2E4ADE80;
+    // Elevation Shadows
+    public static final int SHADOW_SM = 0x40000000;
+    public static final int SHADOW_MD = 0x60000000;
+    public static final int SHADOW_LG = 0x80000000;
+    public static final int SHADOW_PANEL = 0x08FFFFFF;
 
-    // High contrast mode (renders with enhanced borders)
+    // High Contrast Mode
     public static final int HC_BORDER = 0xFFFFFFFF;
     public static final int HC_TEXT = 0xFFFFFFFF;
     public static final int HC_BG = 0xFF000000;

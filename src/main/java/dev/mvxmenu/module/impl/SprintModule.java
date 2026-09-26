@@ -3,31 +3,53 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.math.MathHelper;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Collections;
 
 public class SprintModule extends Module {
 
     private final BooleanSetting omniSprint;
     private final IntegerSetting sprintSpeed;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
 
     public SprintModule() {
-        super("sprint", "Sprint", "Automatically sprint when moving forward", Module.Category.MOVEMENT);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("sprint"))
+                .displayName("Sprint")
+                .description("Automatically sprint when moving forward")
+                .category(Module.Category.MOVEMENT)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.omniSprint = registerSetting(new BooleanSetting("omni_sprint", "Omni Sprint", "Sprint in all directions", false));
         this.sprintSpeed = registerSetting(new IntegerSetting("sprint_speed", "Sprint Speed", "Speed multiplier (%)", 130, 100, 200));
     }
 
-    @Override
-    public void onEnable() {}
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
 
     @Override
-    public void onDisable() {}
+    public void onEnable() {
+    }
+
+    @Override
+    public void onDisable() {
+    }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.player.isSpectator() || mc.player.isCreative()) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null || mc.player.isSpectator() || mc.player.isCreative()) return;
 
         boolean forward = mc.options.forwardKey.isPressed();
         boolean backward = mc.options.backKey.isPressed();

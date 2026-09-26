@@ -3,34 +3,56 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.IntegerSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 
+import java.util.List;
+import java.util.Set;
+import java.util.Collections;
+
 public class AutoEatModule extends Module {
 
     private final IntegerSetting healthThreshold;
     private final BooleanSetting preferGoldenApples;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
     private int eatCooldown = 0;
 
     public AutoEatModule() {
-        super("auto_eat", "Auto Eat", "Automatically eat food when hungry", Module.Category.PLAYER);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("auto_eat"))
+                .displayName("Auto Eat")
+                .description("Automatically eat food when hungry")
+                .category(Module.Category.PLAYER)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.healthThreshold = registerSetting(new IntegerSetting("health_threshold", "Health Threshold", "Eat when health below", 18, 1, 20));
         this.preferGoldenApples = registerSetting(new BooleanSetting("prefer_golden_apples", "Prefer Golden Apples", "Eat golden apples first", true));
     }
 
-    @Override
-    public void onEnable() {}
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
 
     @Override
-    public void onDisable() {}
+    public void onEnable() {
+    }
+
+    @Override
+    public void onDisable() {
+    }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.player.isSpectator() || mc.player.isCreative()) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null || mc.player.isSpectator() || mc.player.isCreative()) return;
 
         float health = mc.player.getHealth();
         float maxHealth = mc.player.getMaxHealth();
@@ -53,10 +75,13 @@ public class AutoEatModule extends Module {
         mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, foodSlot + 36, 0, SlotActionType.PICKUP, mc.player);
         mc.player.getInventory().selectedSlot = prevSlot;
 
-        eatCooldown = 20; // 1 second cooldown
+        eatCooldown = 20;
     }
 
     private int findBestFood() {
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return -1;
+
         int bestSlot = -1;
         int bestValue = -1;
 
@@ -71,12 +96,11 @@ public class AutoEatModule extends Module {
             }
         }
 
-        // Also check offhand
         ItemStack offhand = mc.player.getOffHandStack();
         if (!offhand.isEmpty()) {
             int value = getFoodValue(offhand);
             if (value > bestValue) {
-                return 40; // Special slot for offhand
+                return 40;
             }
         }
 

@@ -3,6 +3,8 @@ package dev.mvxmenu.module.impl;
 import dev.mvxmenu.module.Module;
 import dev.mvxmenu.module.BooleanSetting;
 import dev.mvxmenu.module.ColorSetting;
+import dev.mvxmenu.module.ModuleId;
+import dev.mvxmenu.module.ModuleMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.world.ClientWorld;
@@ -13,6 +15,8 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
+import java.util.Set;
+import java.util.Collections;
 
 public class ESPModule extends Module {
 
@@ -21,10 +25,19 @@ public class ESPModule extends Module {
     private final BooleanSetting mobs;
     private final ColorSetting playerColor;
     private final ColorSetting chestColor;
-    private final MinecraftClient mc = MinecraftClient.getInstance();
 
     public ESPModule() {
-        super("esp", "ESP", "Highlight entities and containers through walls", Module.Category.RENDER);
+        super(ModuleMetadata.builder()
+                .id(ModuleId.of("esp"))
+                .displayName("ESP")
+                .description("Highlight entities and containers through walls")
+                .category(Module.Category.RENDER)
+                .version("1.0.0")
+                .dependencies(Set.of())
+                .softDependencies(Set.of())
+                .authors(List.of("MVXmenu"))
+                .homepage("https://github.com/mvxmenu/mvxmenu")
+                .build());
         this.players = registerSetting(new BooleanSetting("players", "Players", "Show player ESP", true));
         this.chests = registerSetting(new BooleanSetting("chests", "Chests", "Show chest ESP", true));
         this.mobs = registerSetting(new BooleanSetting("mobs", "Mobs", "Show mob ESP", false));
@@ -32,17 +45,25 @@ public class ESPModule extends Module {
         this.chestColor = registerSetting(new ColorSetting("chest_color", "Chest Color", "ESP color for chests", 0xFFFFFF00, true));
     }
 
-    @Override
-    public void onEnable() {}
+    private MinecraftClient getMc() {
+        return MinecraftClient.getInstance();
+    }
 
     @Override
-    public void onDisable() {}
+    public void onEnable() {
+    }
 
     @Override
-    public void onTick() {}
+    public void onDisable() {
+    }
+
+    @Override
+    public void onTick() {
+    }
 
     public void renderESP(ClientWorld world, VertexConsumerProvider providers, double cameraX, double cameraY, double cameraZ) {
-        if (mc.player == null) return;
+        MinecraftClient mc = getMc();
+        if (mc == null || mc.player == null) return;
 
         if (players.getValue()) {
             for (PlayerEntity player : world.getPlayers()) {

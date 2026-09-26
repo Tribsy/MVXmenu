@@ -1,5 +1,5 @@
 plugins {
-    id "fabric-loom" version "1.9.2"
+    id "fabric-loom" version "1.12.7"
     id "maven-publish"
 }
 
@@ -22,7 +22,6 @@ dependencies {
     modImplementation platform("net.fabricmc.fabric-api:fabric-api-bom:${fabric_version}")
     modImplementation "net.fabricmc.fabric-api:fabric-api"
     implementation "com.google.code.gson:gson:2.11.0"
-    annotationProcessor "org.spongepowered:mixin:0.8.7"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testImplementation "org.junit.platform:junit-platform-launcher:1.10.2"
 }
