@@ -60,7 +60,8 @@ public class MvxmenuScreen {
     private float delta;
 
     public MvxmenuScreen() {
-        this.layout = new MvxmenuLayout();
+        this.config = null; // Will be set via setConfig()
+        this.layout = new MvxmenuLayout(config);
         this.rootWidgets = new ArrayList<>();
         this.categoryModules = new LinkedHashMap<>();
         this.categories = Module.Category.values();
@@ -70,6 +71,7 @@ public class MvxmenuScreen {
 
     public void setConfig(MvxmenuConfig config) {
         this.config = config;
+        this.layout.setModConfig(config);
         if (settingsPanelWidget != null) {
             settingsPanelWidget.init(config);
         }

@@ -1,6 +1,5 @@
 package dev.mvxmenu.ui.layout;
 
-import dev.mvxmenu.config.MvxmenuConfig;
 import dev.mvxmenu.config.MvxmenuUiConfig;
 import dev.mvxmenu.ui.screen.MvxmenuScreen;
 import net.minecraft.client.MinecraftClient;
@@ -11,67 +10,21 @@ import net.minecraft.client.MinecraftClient;
  */
 public class MvxmenuLayout {
 
-    // Design resolution (at effective GUI scale 1) - loaded from UI config
-    private static final int DEFAULT_DESIGN_WIDTH = 1280;
-    private static final int DEFAULT_DESIGN_HEIGHT = 800;
+    // Shell dimensions (at GUI scale 1) - used as max caps
+    private static final int SHELL_WIDTH = 1280;
+    private static final int SHELL_HEIGHT = 800;
     private static final int SIDEBAR_WIDTH = 260;
     private static final int HEADER_HEIGHT = 48;
     private static final int FOOTER_HEIGHT = 32;
     private static final int PADDING = 16;  // SP_4
     private static final int WINDOW_RADIUS = 19;
 
-    private final MvxmenuUiConfig uiConfig;
+    private final MvxmenuUiConfig config;
     private final MvxmenuUiConfig.LayoutConfig layout;
-    private MvxmenuConfig modConfig;
 
     public MvxmenuLayout() {
-        this(null);
-    }
-
-    public MvxmenuLayout(MvxmenuConfig modConfig) {
-        this.uiConfig = MvxmenuUiConfig.get();
-        this.layout = uiConfig.getLayout();
-        this.modConfig = modConfig;
-    }
-
-    public void setModConfig(MvxmenuConfig modConfig) {
-        this.modConfig = modConfig;
-    }
-
-    /**
-     * Computes the effective GUI scale:
-     * - If mod's guiScale > 0: use that value
-     * - If mod's guiScale == 0 (Auto): use Minecraft's native GUI scale
-     * - Fallback: 1
-     */
-    private int getEffectiveGuiScale() {
-        if (modConfig != null) {
-            int modGuiScale = modConfig.getGuiScale();
-            if (modGuiScale > 0) {
-                return modGuiScale;
-            }
-            // Auto mode (0) - use Minecraft's native GUI scale
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (client != null && client.options != null) {
-                int nativeScale = client.options.getGuiScale().getValue();
-                if (nativeScale > 0) {
-                    return nativeScale;
-                }
-                // Native is also Auto (0) - compute from window
-                if (client.getWindow() != null) {
-                    return client.getWindow().calculateScaleFactor(0, false);
-                }
-            }
-        }
-        return 1;
-    }
-
-    private int getDesignWidth() {
-        return layout != null ? layout.screenWidth : DEFAULT_DESIGN_WIDTH;
-    }
-
-    private int getDesignHeight() {
-        return layout != null ? layout.screenHeight : DEFAULT_DESIGN_HEIGHT;
+        this.config = MvxmenuUiConfig.get();
+        this.layout = config.getLayout();
     }
 
     public int sidebarWidth() {
@@ -93,44 +46,26 @@ public class MvxmenuLayout {
         return PADDING;
     }
 
-    /**
-     * HUD content area width in Minecraft's scaled coordinates.
-     * Design width divided by effective GUI scale, capped at viewport.
-     */
     public int screenWidth() {
-        int effectiveScale = getEffectiveGuiScale();
-        int designW = getDesignWidth();
-        int scaledW = getScaledWidthSafe();
-        return Math.min(designW / Math.max(1, effectiveScale), scaledW);
+        int scaledWidth = getScaledWidthSafe();
+        return scaledWidth > 0 ? Math.min(SHELL_WIDTH, scaledWidth) : SHELL_WIDTH;
     }
 
-    /**
-     * HUD content area height in Minecraft's scaled coordinates.
-     * Design height divided by effective GUI scale, capped at viewport.
-     */
     public int screenHeight() {
-        int effectiveScale = getEffectiveGuiScale();
-        int designH = getDesignHeight();
-        int scaledH = getScaledHeightSafe();
-        return Math.min(designH / Math.max(1, effectiveScale), scaledH);
+        int scaledHeight = getScaledHeightSafe();
+        return scaledHeight > 0 ? Math.min(SHELL_HEIGHT, scaledHeight) : SHELL_HEIGHT;
     }
 
-    /**
-     * Full viewport dimensions in scaled coordinates (for background fill).
-     */
     public int viewportWidth() {
         int scaledWidth = getScaledWidthSafe();
-        return scaledWidth > 0 ? scaledWidth : DEFAULT_DESIGN_WIDTH;
+        return scaledWidth > 0 ? scaledWidth : SHELL_WIDTH;
     }
 
     public int viewportHeight() {
         int scaledHeight = getScaledHeightSafe();
-        return scaledHeight > 0 ? scaledHeight : DEFAULT_DESIGN_HEIGHT;
+        return scaledHeight > 0 ? scaledHeight : SHELL_HEIGHT;
     }
 
-    /**
-     * Shell position - centered in viewport.
-     */
     public int shellX() {
         return Math.max(0, (viewportWidth() - screenWidth()) / 2);
     }
